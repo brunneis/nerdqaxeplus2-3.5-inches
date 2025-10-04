@@ -14,7 +14,21 @@ UI::UI() {
 }
 
 ///////////////////// FUNCTIONS ////////////////////
+inline lv_coord_t scale_x(lv_coord_t value)
+{
+    return (lv_coord_t) (value * ((float) TDISPLAYS3_LCD_H_RES / 320.0f));
+}
+inline lv_coord_t scale_y(lv_coord_t value)
+{
+    return (lv_coord_t) (value * ((float) TDISPLAYS3_LCD_V_RES / 170.0f));
+}
 
+inline void zoom_img(lv_obj_t *img)
+{
+const lv_img_dsc_t *img_dsc = (const lv_img_dsc_t *)lv_img_get_src(img);
+float scale = (float)TDISPLAYS3_LCD_H_RES / (float)img_dsc->header.w;
+lv_img_set_zoom(img, (uint16_t)(256 * scale));
+}
 
 ///////////////////// SCREENS ////////////////////
 
@@ -26,7 +40,7 @@ void UI::splash1ScreenInit(void)
     ui_imgSplash1 = lv_img_create(ui_Splash1);
     lv_img_set_src(ui_imgSplash1, m_theme->getInitscreen2());
     lv_obj_set_width(ui_imgSplash1, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_imgSplash1, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_height(ui_imgSplash1, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align(ui_imgSplash1, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgSplash1, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_imgSplash1, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -45,16 +59,16 @@ void UI::splash2ScreenInit(void)
     ui_Image1 = lv_img_create(ui_Splash2);
     lv_img_set_src(ui_Image1, m_theme->getSplashscreen2());
     lv_obj_set_width(ui_Image1, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_Image1, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_height(ui_Image1, (LV_SIZE_CONTENT));   /// 1
     lv_obj_set_align(ui_Image1, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_lbConnect = lv_label_create(ui_Splash2);
     lv_obj_set_width(ui_lbConnect, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbConnect, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbConnect, -31);
-    lv_obj_set_y(ui_lbConnect, -40);
+    lv_obj_set_height(ui_lbConnect, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbConnect, scale_x(-31));
+    lv_obj_set_y(ui_lbConnect, scale_y(-40));
     lv_obj_set_align(ui_lbConnect, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbConnect, "Connecting...");
     lv_obj_set_style_text_color(ui_lbConnect, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -83,9 +97,9 @@ void UI::portalScreenInit(void)
 
     ui_lbSSID = lv_label_create(ui_PortalScreen);
     lv_obj_set_width(ui_lbSSID, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbSSID, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbSSID, 75);
-    lv_obj_set_y(ui_lbSSID, 52);
+    lv_obj_set_height(ui_lbSSID, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbSSID, scale_x(75));
+    lv_obj_set_y(ui_lbSSID, scale_y(52));
     lv_obj_set_align(ui_lbSSID, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbSSID, "NERDAXE_XXXX");
     lv_obj_set_style_text_color(ui_lbSSID, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -106,17 +120,17 @@ void UI::miningScreenInit(void)
 
     ui_Image2 = lv_img_create(ui_MiningScreen);
     lv_img_set_src(ui_Image2, m_theme->getMiningscreen2());
-    lv_obj_set_width(ui_Image2, LV_SIZE_CONTENT);  /// 320
-    lv_obj_set_height(ui_Image2, LV_SIZE_CONTENT); /// 170
+    lv_obj_set_width(ui_Image2, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_Image2, (LV_SIZE_CONTENT));
     lv_obj_set_align(ui_Image2, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image2, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_Image2, LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_lbVinput = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbVinput, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbVinput, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbVinput, 234);
-    lv_obj_set_y(ui_lbVinput, -34);
+    lv_obj_set_height(ui_lbVinput, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbVinput, scale_x(234));
+    lv_obj_set_y(ui_lbVinput, scale_y(-34));
     lv_obj_set_align(ui_lbVinput, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbVinput, "5V");
     lv_obj_set_style_text_color(ui_lbVinput, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -126,9 +140,9 @@ void UI::miningScreenInit(void)
 
     ui_lbVcore = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbVcore, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbVcore, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbVcore, 234);
-    lv_obj_set_y(ui_lbVcore, -12);
+    lv_obj_set_height(ui_lbVcore, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbVcore, scale_x(234));
+    lv_obj_set_y(ui_lbVcore, scale_y(-12));
     lv_obj_set_align(ui_lbVcore, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbVcore, "1200mV");
     lv_obj_set_style_text_color(ui_lbVcore, lv_color_hex(0xDEDEDE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -138,9 +152,9 @@ void UI::miningScreenInit(void)
 
     ui_lbIntensidad = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbIntensidad, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbIntensidad, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbIntensidad, 234);
-    lv_obj_set_y(ui_lbIntensidad, 10);
+    lv_obj_set_height(ui_lbIntensidad, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbIntensidad, scale_x(234));
+    lv_obj_set_y(ui_lbIntensidad, scale_y(10));
     lv_obj_set_align(ui_lbIntensidad, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbIntensidad, "2.344mA");
     lv_obj_set_style_text_color(ui_lbIntensidad, lv_color_hex(0xDEDEDE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -150,9 +164,9 @@ void UI::miningScreenInit(void)
 
     ui_lbPower = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbPower, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbPower, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbPower, 234);
-    lv_obj_set_y(ui_lbPower, 32);
+    lv_obj_set_height(ui_lbPower, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbPower, scale_x(234));
+    lv_obj_set_y(ui_lbPower, scale_y(32));
     lv_obj_set_align(ui_lbPower, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbPower, "0W");
     lv_obj_set_style_text_color(ui_lbPower, lv_color_hex(0xDEDEDE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -162,9 +176,9 @@ void UI::miningScreenInit(void)
 
     ui_lbEficiency = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbEficiency, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbEficiency, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbEficiency, -43);
-    lv_obj_set_y(ui_lbEficiency, 61);
+    lv_obj_set_height(ui_lbEficiency, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbEficiency, scale_x(-43));
+    lv_obj_set_y(ui_lbEficiency, scale_y(61));
     lv_obj_set_align(ui_lbEficiency, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbEficiency, "12.4");
     lv_obj_set_style_text_color(ui_lbEficiency, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -174,9 +188,9 @@ void UI::miningScreenInit(void)
 
     ui_lbTemp = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbTemp, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbTemp, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbTemp, -139);
-    lv_obj_set_y(ui_lbTemp, 24);
+    lv_obj_set_height(ui_lbTemp, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbTemp, scale_x(-139));
+    lv_obj_set_y(ui_lbTemp, scale_y(24));
     lv_obj_set_align(ui_lbTemp, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbTemp, "48");
     lv_obj_set_style_text_color(ui_lbTemp, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -186,9 +200,9 @@ void UI::miningScreenInit(void)
 
     ui_lbTime = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbTime, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbTime, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbTime, -190);
-    lv_obj_set_y(ui_lbTime, 0);
+    lv_obj_set_height(ui_lbTime, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbTime, scale_x(-190));
+    lv_obj_set_y(ui_lbTime, scale_y(0));
     lv_obj_set_align(ui_lbTime, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbTime, "1d 2h 5m");
     lv_obj_set_style_text_color(ui_lbTime, lv_color_hex(0xDEEE00), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -198,21 +212,21 @@ void UI::miningScreenInit(void)
 
     ui_lbIP = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbIP, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbIP, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbIP, -16);
-    lv_obj_set_y(ui_lbIP, -77);
+    lv_obj_set_height(ui_lbIP, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbIP, scale_x(-16));
+    lv_obj_set_y(ui_lbIP, scale_y(-77));
     lv_obj_set_align(ui_lbIP, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lbIP, "192.168.1.200");
     lv_obj_set_style_text_color(ui_lbIP, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbIP, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lbIP, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lbIP, &lv_font_montserrat_10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_lbIP, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lbBestDifficulty = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbBestDifficulty, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbBestDifficulty, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbBestDifficulty, 34);
-    lv_obj_set_y(ui_lbBestDifficulty, 21);
+    lv_obj_set_height(ui_lbBestDifficulty, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbBestDifficulty, scale_x(34));
+    lv_obj_set_y(ui_lbBestDifficulty, scale_y(21));
     lv_obj_set_align(ui_lbBestDifficulty, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbBestDifficulty, "22M");
     lv_obj_set_style_text_color(ui_lbBestDifficulty, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -222,9 +236,9 @@ void UI::miningScreenInit(void)
 
     ui_lbHashrate = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbHashrate, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbHashrate, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbHashrate, -208);
-    lv_obj_set_y(ui_lbHashrate, 59);
+    lv_obj_set_height(ui_lbHashrate, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbHashrate, scale_x(-208));
+    lv_obj_set_y(ui_lbHashrate, scale_y(59));
     lv_obj_set_align(ui_lbHashrate, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbHashrate, "500,0");
     lv_obj_set_style_text_color(ui_lbHashrate, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -234,9 +248,9 @@ void UI::miningScreenInit(void)
 
     ui_lbRPM = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbRPM, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbRPM, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbRPM, 20);
-    lv_obj_set_y(ui_lbRPM, -9);
+    lv_obj_set_height(ui_lbRPM, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbRPM, scale_x(20));
+    lv_obj_set_y(ui_lbRPM, scale_y(-9));
     lv_obj_set_align(ui_lbRPM, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lbRPM, "5000");
     lv_obj_set_style_text_color(ui_lbRPM, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -246,9 +260,9 @@ void UI::miningScreenInit(void)
 
     ui_lbASIC = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbASIC, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbASIC, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbASIC, 111);
-    lv_obj_set_y(ui_lbASIC, -66);
+    lv_obj_set_height(ui_lbASIC, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbASIC, scale_x(111));
+    lv_obj_set_y(ui_lbASIC, scale_y(-66));
     lv_obj_set_align(ui_lbASIC, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lbASIC, m_board->getAsicModel());
     lv_obj_set_style_text_color(ui_lbASIC, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -266,16 +280,16 @@ void UI::settingsScreenInit(void)
     ui_Image4 = lv_img_create(ui_SettingsScreen);
     lv_img_set_src(ui_Image4, m_theme->getSettingsscreen());
     lv_obj_set_width(ui_Image4, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_Image4, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_height(ui_Image4, (LV_SIZE_CONTENT)); /// 1
     lv_obj_set_align(ui_Image4, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image4, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_Image4, LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_lbIPSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbIPSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbIPSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbIPSet, -16);
-    lv_obj_set_y(ui_lbIPSet, -77);
+    lv_obj_set_height(ui_lbIPSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbIPSet, scale_x(-16));
+    lv_obj_set_y(ui_lbIPSet, scale_y(-77));
     lv_obj_set_align(ui_lbIPSet, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lbIPSet, "192.168.1.200");
     lv_obj_set_style_text_color(ui_lbIPSet, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -285,9 +299,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbBestDifficultySet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbBestDifficultySet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbBestDifficultySet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbBestDifficultySet, 34);
-    lv_obj_set_y(ui_lbBestDifficultySet, 21);
+    lv_obj_set_height(ui_lbBestDifficultySet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbBestDifficultySet, scale_x(34));
+    lv_obj_set_y(ui_lbBestDifficultySet, scale_y(21));
     lv_obj_set_align(ui_lbBestDifficultySet, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbBestDifficultySet, "22M");
     lv_obj_set_style_text_color(ui_lbBestDifficultySet, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -297,9 +311,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbVcoreSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbVcoreSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbVcoreSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbVcoreSet, 43);
-    lv_obj_set_y(ui_lbVcoreSet, -45);
+    lv_obj_set_height(ui_lbVcoreSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbVcoreSet, scale_x(43));
+    lv_obj_set_y(ui_lbVcoreSet, scale_y(-45));
     lv_obj_set_align(ui_lbVcoreSet, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbVcoreSet, "1200mV");
     lv_obj_set_style_text_color(ui_lbVcoreSet, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -309,9 +323,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbFreqSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbFreqSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbFreqSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbFreqSet, 43);
-    lv_obj_set_y(ui_lbFreqSet, -25);
+    lv_obj_set_height(ui_lbFreqSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbFreqSet, scale_x(43));
+    lv_obj_set_y(ui_lbFreqSet, scale_y(-25));
     lv_obj_set_align(ui_lbFreqSet, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbFreqSet, "485");
     lv_obj_set_style_text_color(ui_lbFreqSet, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -321,9 +335,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbFanSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbFanSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbFanSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbFanSet, 43);
-    lv_obj_set_y(ui_lbFanSet, -5);
+    lv_obj_set_height(ui_lbFanSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbFanSet, scale_x(43));
+    lv_obj_set_y(ui_lbFanSet, scale_y(-5));
     lv_obj_set_align(ui_lbFanSet, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbFanSet, "AUTO");
     lv_obj_set_style_text_color(ui_lbFanSet, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -333,9 +347,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbPoolSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbPoolSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbPoolSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbPoolSet, 169);
-    lv_obj_set_y(ui_lbPoolSet, -9);
+    lv_obj_set_height(ui_lbPoolSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbPoolSet, scale_x(169));
+    lv_obj_set_y(ui_lbPoolSet, scale_y(-9));
     lv_obj_set_align(ui_lbPoolSet, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbPoolSet, "public-pool.io");
     lv_obj_set_style_text_color(ui_lbPoolSet, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -345,9 +359,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbHashrateSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbHashrateSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbHashrateSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbHashrateSet, -208);
-    lv_obj_set_y(ui_lbHashrateSet, 59);
+    lv_obj_set_height(ui_lbHashrateSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbHashrateSet, scale_x(-208));
+    lv_obj_set_y(ui_lbHashrateSet, scale_y(59));
     lv_obj_set_align(ui_lbHashrateSet, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbHashrateSet, "500,0");
     lv_obj_set_style_text_color(ui_lbHashrateSet, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -357,9 +371,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbShares = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbShares, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbShares, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbShares, -23);
-    lv_obj_set_y(ui_lbShares, 58);
+    lv_obj_set_height(ui_lbShares, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbShares, scale_x(-23));
+    lv_obj_set_y(ui_lbShares, scale_y(58));
     lv_obj_set_align(ui_lbShares, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbShares, "0/0");
     lv_obj_set_style_text_color(ui_lbShares, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -369,9 +383,9 @@ void UI::settingsScreenInit(void)
 
     ui_lbPortSet = lv_label_create(ui_SettingsScreen);
     lv_obj_set_width(ui_lbPortSet, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lbPortSet, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lbPortSet, 211);
-    lv_obj_set_y(ui_lbPortSet, 13);
+    lv_obj_set_height(ui_lbPortSet, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lbPortSet, scale_x(211));
+    lv_obj_set_y(ui_lbPortSet, scale_y(13));
     lv_obj_set_align(ui_lbPortSet, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbPortSet, "3333");
     lv_obj_set_style_text_color(ui_lbPortSet, lv_color_hex(0xDEDADE), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -395,7 +409,7 @@ void UI::logScreenInit(void)
     lv_obj_set_style_text_color(ui_LogLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_LogLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_LogLabel, &ui_font_OpenSansBold14, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_width(ui_LogLabel, lv_pct(100)); // Set label width to 100% of the parent
+    lv_obj_set_width(ui_LogLabel, scale_x(lv_pct(100))); // Set label width to 100% of the parent
     lv_obj_set_style_text_align(ui_LogLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_align(ui_LogLabel, LV_ALIGN_TOP_LEFT, 0, 0);
 }
@@ -410,16 +424,16 @@ void UI::bTCScreenInit(void)
     ui_ImgBTCscreen = lv_img_create(ui_BTCScreen);
     lv_img_set_src(ui_ImgBTCscreen, m_theme->getBtcscreen());
     lv_obj_set_width(ui_ImgBTCscreen, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_ImgBTCscreen, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_height(ui_ImgBTCscreen, (LV_SIZE_CONTENT)); /// 1
     lv_obj_set_align(ui_ImgBTCscreen, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_ImgBTCscreen, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_ImgBTCscreen, LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_lblBTCPrice = lv_label_create(ui_BTCScreen);
     lv_obj_set_width(ui_lblBTCPrice, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lblBTCPrice, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lblBTCPrice, 30);
-    lv_obj_set_y(ui_lblBTCPrice, 47);
+    lv_obj_set_height(ui_lblBTCPrice, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lblBTCPrice, scale_x(30));
+    lv_obj_set_y(ui_lblBTCPrice, scale_y(47));
     lv_obj_set_align(ui_lblBTCPrice, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblBTCPrice, "0$");
     lv_obj_set_style_text_color(ui_lblBTCPrice, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -439,9 +453,9 @@ void UI::bTCScreenInit(void)
 
     ui_lblHashPrice = lv_label_create(ui_BTCScreen);
     lv_obj_set_width(ui_lblHashPrice, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lblHashPrice, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lblHashPrice, 223);
-    lv_obj_set_y(ui_lblHashPrice, -63);
+    lv_obj_set_height(ui_lblHashPrice, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lblHashPrice, scale_x(223));
+    lv_obj_set_y(ui_lblHashPrice, scale_y(-63));
     lv_obj_set_align(ui_lblHashPrice, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblHashPrice, "500,0");
     lv_obj_set_style_text_color(ui_lblHashPrice, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -451,9 +465,9 @@ void UI::bTCScreenInit(void)
 
     ui_lblTempPrice = lv_label_create(ui_BTCScreen);
     lv_obj_set_width(ui_lblTempPrice, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_lblTempPrice, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_lblTempPrice, 261);
-    lv_obj_set_y(ui_lblTempPrice, -18);
+    lv_obj_set_height(ui_lblTempPrice, (LV_SIZE_CONTENT)); /// 1
+    lv_obj_set_x(ui_lblTempPrice, scale_x(261));
+    lv_obj_set_y(ui_lblTempPrice, scale_y(-18));
     lv_obj_set_align(ui_lblTempPrice, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblTempPrice, "24");
     lv_obj_set_style_text_color(ui_lblTempPrice, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -470,16 +484,16 @@ void UI::globalStatsScreenInit(void)
     ui_Image5 = lv_img_create(ui_GlobalStats);
     lv_img_set_src(ui_Image5, m_theme->getGlobalstats());
     lv_obj_set_width(ui_Image5, LV_SIZE_CONTENT);   /// 321
-    lv_obj_set_height(ui_Image5, LV_SIZE_CONTENT);    /// 170
+    lv_obj_set_height(ui_Image5, (LV_SIZE_CONTENT));    /// 170
     lv_obj_set_align(ui_Image5, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     ui_lblHalvingPercent = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblHalvingPercent, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblHalvingPercent, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblHalvingPercent, -64);
-    lv_obj_set_y(ui_lblHalvingPercent, 36);
+    lv_obj_set_height(ui_lblHalvingPercent, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblHalvingPercent, scale_x(-64));
+    lv_obj_set_y(ui_lblHalvingPercent, scale_y(36));
     lv_obj_set_align(ui_lblHalvingPercent, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblHalvingPercent, "95%");
     lv_obj_set_style_text_color(ui_lblHalvingPercent, lv_color_hex(0xC6C6C5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -489,9 +503,9 @@ void UI::globalStatsScreenInit(void)
 
     ui_lblBlock = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblBlock, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblBlock, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblBlock, -37);
-    lv_obj_set_y(ui_lblBlock, 67);
+    lv_obj_set_height(ui_lblBlock, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblBlock, scale_x(-37));
+    lv_obj_set_y(ui_lblBlock, scale_y(67));
     lv_obj_set_align(ui_lblBlock, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblBlock, "881.557");
     lv_obj_set_style_text_color(ui_lblBlock, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -501,9 +515,9 @@ void UI::globalStatsScreenInit(void)
 
     ui_lblBlocksToHalving = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblBlocksToHalving, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblBlocksToHalving, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblBlocksToHalving, -97);
-    lv_obj_set_y(ui_lblBlocksToHalving, 68);
+    lv_obj_set_height(ui_lblBlocksToHalving, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblBlocksToHalving, scale_x(-97));
+    lv_obj_set_y(ui_lblBlocksToHalving, scale_y(68));
     lv_obj_set_align(ui_lblBlocksToHalving, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblBlocksToHalving, "210.000");
     lv_obj_set_style_text_color(ui_lblBlocksToHalving, lv_color_hex(0xC6C6C5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -513,9 +527,9 @@ void UI::globalStatsScreenInit(void)
 
     ui_lblDifficulty = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblDifficulty, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblDifficulty, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblDifficulty, -40);
-    lv_obj_set_y(ui_lblDifficulty, -11);
+    lv_obj_set_height(ui_lblDifficulty, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblDifficulty, scale_x(-40));
+    lv_obj_set_y(ui_lblDifficulty, scale_y(-11));
     lv_obj_set_align(ui_lblDifficulty, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblDifficulty, "81T");
     lv_obj_set_style_text_color(ui_lblDifficulty, lv_color_hex(0xC6C6C5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -525,9 +539,9 @@ void UI::globalStatsScreenInit(void)
 
     ui_lblGlobalHash = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblGlobalHash, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblGlobalHash, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblGlobalHash, -39);
-    lv_obj_set_y(ui_lblGlobalHash, 30);
+    lv_obj_set_height(ui_lblGlobalHash, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblGlobalHash, scale_x(-39));
+    lv_obj_set_y(ui_lblGlobalHash, scale_y(30));
     lv_obj_set_align(ui_lblGlobalHash, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblGlobalHash, "751,45");
     lv_obj_set_style_text_color(ui_lblGlobalHash, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -537,9 +551,9 @@ void UI::globalStatsScreenInit(void)
 
     ui_lbllowFee = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lbllowFee, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lbllowFee, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lbllowFee, 47);
-    lv_obj_set_y(ui_lbllowFee, -64);
+    lv_obj_set_height(ui_lbllowFee, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lbllowFee, scale_x(47));
+    lv_obj_set_y(ui_lbllowFee, scale_y(-64));
     lv_obj_set_align(ui_lbllowFee, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lbllowFee, "2");
     lv_obj_set_style_text_color(ui_lbllowFee, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -549,9 +563,9 @@ void UI::globalStatsScreenInit(void)
 
     ui_lblmedFee = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblmedFee, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblmedFee, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblmedFee, 89);
-    lv_obj_set_y(ui_lblmedFee, -64);
+    lv_obj_set_height(ui_lblmedFee, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblmedFee, scale_x(89));
+    lv_obj_set_y(ui_lblmedFee, scale_y(-64));
     lv_obj_set_align(ui_lblmedFee, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblmedFee, "200");
     lv_obj_set_style_text_color(ui_lblmedFee, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -561,16 +575,15 @@ void UI::globalStatsScreenInit(void)
 
     ui_lblhighFee = lv_label_create(ui_GlobalStats);
     lv_obj_set_width(ui_lblhighFee, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblhighFee, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_lblhighFee, 138);
-    lv_obj_set_y(ui_lblhighFee, -64);
+    lv_obj_set_height(ui_lblhighFee, (LV_SIZE_CONTENT));    /// 1
+    lv_obj_set_x(ui_lblhighFee, scale_x(138));
+    lv_obj_set_y(ui_lblhighFee, scale_y(-64));
     lv_obj_set_align(ui_lblhighFee, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblhighFee, "1000");
     lv_obj_set_style_text_color(ui_lblhighFee, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblhighFee, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblhighFee, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblhighFee, &ui_font_OpenSansBold13, LV_PART_MAIN | LV_STATE_DEFAULT);
-
 }
 
 // Function to show the overlay with an error message and custom colors
@@ -595,9 +608,9 @@ void UI::showErrorOverlay(const char *error_message, uint32_t error_code)
     // Create the first label for the error message
     lv_obj_t *error_label = lv_label_create(ui_errOverlayContainer);
     lv_obj_set_width(error_label, LV_SIZE_CONTENT);  // Adjust width based on content
-    lv_obj_set_height(error_label, LV_SIZE_CONTENT); // Adjust height based on content
-    lv_obj_set_x(error_label, 0); // Center horizontally
-    lv_obj_set_y(error_label, 0); // Align slightly below the top
+    lv_obj_set_height(error_label, (LV_SIZE_CONTENT)); // Adjust height based on content
+    lv_obj_set_x(error_label, scale_x(0)); // Center horizontally
+    lv_obj_set_y(error_label, scale_y(0)); // Align slightly below the top
     lv_obj_set_align(error_label, LV_ALIGN_TOP_MID); // Align top-middle
     lv_label_set_text(error_label, error_message); // Set the error message text
     lv_obj_set_style_text_color(error_label, lv_color_hex(0xe60000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -609,9 +622,9 @@ void UI::showErrorOverlay(const char *error_message, uint32_t error_code)
     // Create the second label for the Guru Meditation Error
     lv_obj_t *code_label = lv_label_create(ui_errOverlayContainer);
     lv_obj_set_width(code_label, LV_SIZE_CONTENT);  // Adjust width based on content
-    lv_obj_set_height(code_label, LV_SIZE_CONTENT); // Adjust height based on content
-    lv_obj_set_x(code_label, 0); // Center horizontally
-    lv_obj_set_y(code_label, 0); // Align slightly above the bottom
+    lv_obj_set_height(code_label, (LV_SIZE_CONTENT)); // Adjust height based on content
+    lv_obj_set_x(code_label, scale_x(0)); // Center horizontally
+    lv_obj_set_y(code_label, scale_y(0)); // Align slightly above the bottom
     lv_obj_set_align(code_label, LV_ALIGN_BOTTOM_MID); // Align bottom-middle
 
     // Format the error code message
@@ -654,6 +667,7 @@ void UI::showImageOverlay(const lv_img_dsc_t *image)
     // Create an image inside the container
     lv_obj_t *img = lv_img_create(ui_imageOverlayContainer);
     lv_img_set_src(img, image);
+
     lv_obj_align(img, LV_ALIGN_CENTER, 0, 0); // Center the image inside the container
 }
 

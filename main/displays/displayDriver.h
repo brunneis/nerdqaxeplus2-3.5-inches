@@ -16,7 +16,8 @@
 #define PIN_BUTTON_2 (gpio_num_t) 0  // Button 2 GPIO pin
 
 // Display settings
-#define TDISPLAYS3_LCD_PIXEL_CLOCK_HZ (6528000)                             // Pixel clock for LCD in Hz (60 FPS, 170 x 320 pixels)
+//#define TDISPLAYS3_LCD_PIXEL_CLOCK_HZ (6528000)                             // Pixel clock for LCD in Hz (60 FPS, 170 x 320 pixels)
+
 #define TDISPLAYS3_LCD_BK_LIGHT_ON_LEVEL 1                                  // Backlight ON level (1: ON, 0: OFF)
 #define TDISPLAYS3_LCD_BK_LIGHT_OFF_LEVEL !TDISPLAYS3_LCD_BK_LIGHT_ON_LEVEL // Backlight OFF level
 
@@ -40,9 +41,15 @@
 #define TDISPLAYS3_PIN_NUM_BK_LIGHT (gpio_num_t) 38 // LCD backlight control pin
 
 // LCD resolution and buffer size
-#define TDISPLAYS3_LCD_H_RES 320                                            // Horizontal resolution
-#define TDISPLAYS3_LCD_V_RES 170                                            // Vertical resolution
-#define LVGL_LCD_BUF_SIZE (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES) / 4 // Buffer size for display
+#define TDISPLAYS3_LCD_H_RES 480 // Horizontal resolution
+#define TDISPLAYS3_LCD_V_RES 320 // Vertical resolution
+#define LVGL_LCD_BUF_SIZE (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES) / 6 // Buffer size for display
+#define TDISPLAYS3_LCD_PIXEL_CLOCK_HZ                                                                                              \
+    (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES * 80) // Pixel clock for LCD in Hz (60 FPS, 170 x 320 pixels)
+
+//#define TDISPLAYS3_LCD_H_RES 320                                            // Horizontal resolution
+//#define TDISPLAYS3_LCD_V_RES 170                                            // Vertical resolution
+//#define LVGL_LCD_BUF_SIZE (TDISPLAYS3_LCD_H_RES * TDISPLAYS3_LCD_V_RES) / 4 // Buffer size for display                   // Pixel clock for LCD in Hz (60 FPS, 170 x 320 pixels)
 
 // Bit sizes for LCD commands and parameters
 #define TDISPLAYS3_LCD_CMD_BITS 8   // Bits for LCD commands
@@ -62,6 +69,11 @@
 #define SCREEN_SETTINGS 6 // Settings screen
 #define SCREEN_LOG 7      // Log screen
 #define SCREEN_GLBSTATS 8 // Global Mining stats screen
+
+// Display scaling configuration (compatible with older LVGL)
+#define TDISPLAYS3_ENABLE_SCALING 1  // Enable content scaling
+#define TDISPLAYS3_SCALE_FACTOR 3.0f // Scale factor (1.0 = normal, 1.5 = 50% larger, 2.0 = double)
+#define TDISPLAYS3_ZOOM_LEVEL (uint16_t) (256 * TDISPLAYS3_SCALE_FACTOR) // For compatibility
 
 /* CLASS DECLARATION -----------------------------------------------------*/
 class System;
@@ -86,6 +98,9 @@ class DisplayDriver {
     uint32_t m_blockHeight; // Current Bitcoin price
 
     UI *m_ui;
+
+    // Add to displayDriver.h public section:
+    void setContentScale(float scale, lv_disp_t *disp, lv_disp_drv_t *drv); // Set content scaling factor
 
     // Helper methods for LVGL handling
     static bool notifyLvglFlushReady(esp_lcd_panel_io_handle_t panelIo, esp_lcd_panel_io_event_data_t *edata, void *userCtx);
