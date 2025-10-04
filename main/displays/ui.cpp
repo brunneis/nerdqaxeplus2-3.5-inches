@@ -226,25 +226,25 @@ void UI::miningScreenInit(void)
     lv_obj_set_width(ui_lbBestDifficulty, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_lbBestDifficulty, (LV_SIZE_CONTENT)); /// 1
     lv_obj_set_x(ui_lbBestDifficulty, scale_x(34));
-    lv_obj_set_y(ui_lbBestDifficulty, scale_y(21));
+    lv_obj_set_y(ui_lbBestDifficulty, scale_y(23));
     lv_obj_set_align(ui_lbBestDifficulty, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lbBestDifficulty, "22M");
     lv_obj_set_style_text_color(ui_lbBestDifficulty, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbBestDifficulty, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lbBestDifficulty, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lbBestDifficulty, &ui_font_OpenSansBold14, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_lbBestDifficulty, &ui_font_OpenSansBold24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lbHashrate = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbHashrate, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_lbHashrate, (LV_SIZE_CONTENT)); /// 1
     lv_obj_set_x(ui_lbHashrate, scale_x(-208));
-    lv_obj_set_y(ui_lbHashrate, scale_y(59));
+    lv_obj_set_y(ui_lbHashrate, scale_y(62));
     lv_obj_set_align(ui_lbHashrate, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lbHashrate, "500,0");
     lv_obj_set_style_text_color(ui_lbHashrate, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lbHashrate, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lbHashrate, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lbHashrate, &ui_font_DigitalNumbers28, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_lbHashrate, &ui_font_DigitalNumbers40, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lbRPM = lv_label_create(ui_MiningScreen);
     lv_obj_set_width(ui_lbRPM, LV_SIZE_CONTENT);  /// 1

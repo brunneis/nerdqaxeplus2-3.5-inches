@@ -53,7 +53,7 @@ SRCS
     "./displays/ui_helpers.cpp"
     "./displays/images/ui_font_DigitalNumbers16.c"
     "./displays/images/ui_font_DigitalNumbers28.c"
-    "./displays/images/ui_font_DigitalNumbers16.c"
+    "./displays/images/ui_font_DigitalNumbers40.c"
     "./displays/images/ui_font_OpenSansBold13.c"
     "./displays/images/ui_font_OpenSansBold14.c"
     "./displays/images/ui_font_OpenSansBold24.c"
