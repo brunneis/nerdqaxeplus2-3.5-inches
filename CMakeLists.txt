@@ -15,6 +15,14 @@ endif()
 
 message(STATUS "Selected board: $ENV{BOARD}")
 
+# Enable bigscreen (480x320) display configuration if BIGSCREEN env var is set
+if(DEFINED ENV{BIGSCREEN} AND "$ENV{BIGSCREEN}" STREQUAL "1")
+    add_compile_definitions(BIGSCREEN_480x320)
+    message(STATUS "Big screen mode enabled (480x320)")
+else()
+    message(STATUS "Standard screen mode (320x170)")
+endif()
+
 add_compile_definitions(LV_MEM_CUSTOM=1)
 add_compile_definitions(LV_MEM_CUSTOM_INCLUDE=<lvgl_psram.h>)
 add_compile_definitions(LV_MEM_CUSTOM_ALLOC=lv_psram_alloc)

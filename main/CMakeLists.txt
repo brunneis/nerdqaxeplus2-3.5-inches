@@ -1,5 +1,5 @@
-idf_component_register(
-SRCS
+# Build source file list conditionally based on display configuration
+set(COMPONENT_SRCS
     "main.cpp"
     "nvs_config.cpp"
     "system.cpp"
@@ -53,7 +53,6 @@ SRCS
     "./displays/ui_helpers.cpp"
     "./displays/images/ui_font_DigitalNumbers16.c"
     "./displays/images/ui_font_DigitalNumbers28.c"
-    "./displays/images/ui_font_DigitalNumbers40.c"
     "./displays/images/ui_font_OpenSansBold13.c"
     "./displays/images/ui_font_OpenSansBold14.c"
     "./displays/images/ui_font_OpenSansBold24.c"
@@ -62,7 +61,16 @@ SRCS
     "./displays/images/ui_font_vt323_35.c"
     "./displays/images/ui_img_found_block_png.c"
     "./displays/images/themes/themes.c"
+)
 
+# Add bigscreen-specific font if BIGSCREEN mode is enabled
+if(DEFINED ENV{BIGSCREEN} AND "$ENV{BIGSCREEN}" STREQUAL "1")
+    list(APPEND COMPONENT_SRCS "./displays/images/ui_font_DigitalNumbers40.c")
+endif()
+
+idf_component_register(
+SRCS
+    ${COMPONENT_SRCS}
 
 INCLUDE_DIRS
     "."

@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 BOARD="${BOARD:-NERDQAXEPLUS2}"
+BIGSCREEN="${BIGSCREEN:-1}"  # Enable bigscreen by default (set to 0 for standard screen)
 OUTPUT_DIR="build"
 FACTORY_BIN="esp-miner-factory-${BOARD}.bin"
 OTA_BIN="esp-miner-NerdQAxe++.bin"
@@ -23,6 +24,11 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  ESP-Miner Build Script${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo -e "Board: ${GREEN}${BOARD}${NC}"
+if [ "$BIGSCREEN" = "1" ]; then
+    echo -e "Display: ${GREEN}480x320 (bigscreen)${NC}"
+else
+    echo -e "Display: ${GREEN}320x170 (standard)${NC}"
+fi
 echo ""
 
 # Step 1: Check if Docker is available
@@ -52,17 +58,17 @@ fi
 echo ""
 echo -e "${BLUE}Step 1/5: Configuring target ESP32-S3${NC}"
 if [ "$USE_DOCKER" = true ]; then
-    ./docker/idf-ci.sh set-target esp32-s3
+    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" ./docker/idf-ci.sh set-target esp32-s3
 else
-    idf.py set-target esp32-s3
+    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" idf.py set-target esp32-s3
 fi
 
 echo ""
 echo -e "${BLUE}Step 2/5: Compiling firmware and frontend...${NC}"
 if [ "$USE_DOCKER" = true ]; then
-    ./docker/idf-ci.sh build
+    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" ./docker/idf-ci.sh build
 else
-    idf.py build
+    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" idf.py build
 fi
 
 echo ""
