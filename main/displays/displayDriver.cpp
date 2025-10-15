@@ -493,12 +493,8 @@ void DisplayDriver::updateHashrate(System *module, float power)
     float efficiency = power / (module->getCurrentHashrate10m() / 1000.0);
     float hashrate = module->getCurrentHashrate();
 
-    // >= 10T doesn't fit on the screen with a decimal place
-    if (hashrate >= 10000.0) {
-        snprintf(strData, sizeof(strData), "%d", (int) (hashrate + 0.5f));
-    } else {
-        snprintf(strData, sizeof(strData), "%.1f", hashrate);
-    }
+    // Display as integer to add more space
+    snprintf(strData, sizeof(strData), "%d", (int) (hashrate + 0.5f));
 
     lv_label_set_text(m_ui->ui_lbHashrate, strData);    // Update hashrate
     lv_label_set_text(m_ui->ui_lbHashrateSet, strData); // Update hashrate
