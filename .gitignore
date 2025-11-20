@@ -43,3 +43,7 @@ managed_components/*
 config.csv
 nerdqaxe+.bin
 .DS_Store
+
+# Temporary and backup files
+sdkconfig.bak
+*_compressed
