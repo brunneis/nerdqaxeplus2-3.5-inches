@@ -23,10 +23,12 @@ import { NbCustomTokenStorage } from './@core/utils.ts/customtokenstorage';
 import { CoreModule } from './@core/core.module';
 import { I18nModule } from './@i18n/i18n.module';
 import { WithCredentialsInterceptor } from './with-credentials.interceptor';
+import { OtpSessionInterceptor } from './services/otp-session.interceptor';
 
 
 export function createTranslateLoader(http: HttpClient) {
-  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+  const commit = '__COMMIT__';
+  return new TranslateHttpLoader(http, './assets/i18n/', `.json?v=${commit}`);
 }
 
 function filterInterceptorRequest(req: HttpRequest<any>): boolean {
@@ -49,7 +51,7 @@ function filterInterceptorRequest(req: HttpRequest<any>): boolean {
         NbWindowModule.forRoot(),
         NbToastrModule.forRoot(),
         TranslateModule.forRoot({
-            defaultLanguage: 'en-US',
+            defaultLanguage: 'en',
             isolate: false,
             loader: {
                 provide: TranslateLoader,
@@ -75,10 +77,10 @@ function filterInterceptorRequest(req: HttpRequest<any>): boolean {
         { provide: HTTP_INTERCEPTORS, useClass: JWTInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: ResponseInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: WithCredentialsInterceptor, multi: true },
+        { provide: HTTP_INTERCEPTORS, useClass: OtpSessionInterceptor, multi: true },
         { provide: NB_AUTH_TOKEN_INTERCEPTOR_FILTER, useValue: filterInterceptorRequest },
         { provide: APP_BASE_HREF, useValue: "/" },
         { provide: NbTokenStorage, useClass: NbCustomTokenStorage },
-        //{ provide: LOCALE_ID, useValue: 'it-IT' },
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule { }

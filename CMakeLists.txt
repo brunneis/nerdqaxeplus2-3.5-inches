@@ -23,6 +23,8 @@ else()
     message(STATUS "Standard screen mode (320x170)")
 endif()
 
+set(ENV{SOURCE_DATE_EPOCH} 0)
+
 add_compile_definitions(LV_MEM_CUSTOM=1)
 add_compile_definitions(LV_MEM_CUSTOM_INCLUDE=<lvgl_psram.h>)
 add_compile_definitions(LV_MEM_CUSTOM_ALLOC=lv_psram_alloc)
