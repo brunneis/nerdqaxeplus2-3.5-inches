@@ -20,7 +20,8 @@
     "SUBMIT": "Enviar",
     "ERROR": "Error",
     "SUCCESS": "Éxito",
-    "JUST_NOW": "Ahora mismo"
+    "JUST_NOW": "Ahora mismo",
+    "SHUTDOWN": "El minero se ha apagado."
   },
   "NAVIGATION": {
     "HOME": "Inicio",
@@ -35,7 +36,7 @@
   "HOME": {
     "HASH_RATE": "Tasa de Hash",
     "HASH_RATE_TOOLTIP": "Tasa de hash reportada por los ASICs.",
-    "HASH_RATE_CHART": "Gráfico de Tasa de Hash",
+    "HASH_RATE_CHART": "Nerd* Gráfico",
     "HASHRATE_ESTIMATED": "Tasa de hash estimada por las acciones encontradas.",
     "SHARES": "Acciones",
     "POWER": "Potencia",
@@ -48,7 +49,7 @@
     "EFFICIENCY": "Eficiencia",
     "BEST_DIFF": "Mejor Dificultad",
     "BEST_DIFF_ALLTIME": "récord absoluto",
-    "BEST_DIFF_BOOT": "desde el inicio del sistema",
+    "BEST_DIFF_BOOT": "desde conectar",
     "SESSION_DIFF": "Dificultad de Sesión",
     "NETWORK": "Red",
     "POOL": "Pool",
@@ -59,20 +60,45 @@
     "IDLE": "Inactivo",
     "PRIMARY_POOL": "Pool Primario",
     "FALLBACK_POOL": "Pool de Respaldo",
-    "HASHRATE_10M": "Hashrate 10min",
-    "HASHRATE_1H": "Hashrate 1h",
-    "HASHRATE_1D": "Hashrate 1d"
+    "HASHRATE_1M": "Hashrate  (1 min)",
+    "HASHRATE_10M": " (10 min)",
+    "HASHRATE_1H": " (1 hora)",
+    "HASHRATE_1D": " (1 día)",
+    "CHART_SPAN": "Intervalo",
+    "FAN_CHANNEL": "Ventilador C{{channel}}",
+    "FAN_ASICS_LABEL": "ASIC",
+    "FAN_VR_LABEL": "Regulador de voltaje",
+    "FAN_LOW_RPM_HINT": "Con un ajuste bajo, el ventilador no muestra las RPM exactas. Sin embargo, funciona de acuerdo con el porcentaje de capacidad mostrado.",
+    "SHARE_TOO_SMALL": "Porcentaje para este pool demasiado bajo!",
+    "HIDE_CHART": "ocultar",
+    "SHOW_CHART": "mostrar",
+    "STRATUM_NOT_CONNECTED": "Stratum no conectado para este pool.",
+    "RESET_STATS": "Restablecer estadísticas de sesión",
+    "RESET_STATS_CONFIRM": "¿Restablecer todas las estadísticas de sesión (shares, mejor diff, errores)?",
+    "RESET_STATS_SUCCESS": "Estadísticas de sesión restablecidas.",
+    "RESET_STATS_FAILED": "Error al restablecer las estadísticas."
   },
   "PERFORMANCE": {
     "TITLE": "Rendimiento",
+    "TITLE_POWER_USAGE": "Consumo de energía",
     "POWER": "Potencia",
+    "BEST_DIFFICULTY": "Mejor dificultad",
+    "INPUT_CURRENT": "Corriente de Entrada",
     "INPUT_VOLTAGE": "Voltaje de Entrada",
     "ASIC_VOLTAGE": "Voltaje ASIC",
     "ASIC_VOLTAGE_MEASURED": "Voltaje ASIC Medido",
     "HEAT": "Calor",
     "TITLE_HEAT": "Calor",
     "ASIC_TEMP": "Temp ASIC",
-    "VR_TEMP": "Temp VR",
+    "VR_TEMP": "Regulador de voltaje",
+    "ASIC_TEMP_LEGEND": "ASIC",
+    "VR_TEMP_LEGEND": "Regulador de voltaje",
+    "VR_TEMP_EXT": "VRT ext",
+    "VR_TEMP_INT": "VRT int",
+    "VR_TEMP_TOOLTIP_LINE1": "Aqui puedes ver las temperaturas internas y externas del regulador de voltaje.",
+    "VR_TEMP_TOOLTIP_LINE2": "Interna significa: medida directamente en el sensor.",
+    "VR_TEMP_TOOLTIP_LINE3": "Externa significa: la temperatura en la PCB alrededor del regulador.",
+    "VR_TEMP_TOOLTIP_LINE4": "La temperatura externa suele ser mas importante porque tambien afecta a otros componentes.",
     "FAN_SPEED": "Velocidad Ventilador",
     "FAN_RPM": "RPM Ventilador",
     "ASIC_FREQUENCY": "Frecuencia ASIC",
@@ -126,7 +152,14 @@
     "DEFAULT": "predeterminado",
     "TIME_FORMAT": "Formato de Hora",
     "TIME_FORMAT_24H": "Formato 24 horas",
-    "TIME_FORMAT_12H": "Formato 12 horas (AM/PM)"
+    "TIME_FORMAT_12H": "Formato 12 horas (AM/PM)",
+    "POOL_MODE": "Modo de pool",
+    "POOL_MODE_FAILOVER": "Failover (primario/secundario)",
+    "POOL_MODE_DUAL": "Pool dual",
+    "POOL_BALANCE": "Balance de pool",
+    "POOL_BALANCE_HINT": "Distribuye trabajos entre el pool primario y el secundario, p. ej., 70/30.",
+    "STRATUM": "Configuración de Stratum",
+    "SWAP_POOLS": "Intercambiar pools"
   },
   "SYSTEM": {
     "TITLE": "Información del Sistema",
@@ -185,7 +218,11 @@
     "RESET_SDIO": "Reinicio SDIO",
     "RESET_NOT_SPECIFIED": "No especificado",
     "ABOUT_NERDQX": " proyecto fue desarrollado por un equipo internacional de entusiastas y lanzado como hardware abierto. NerdQX pertenece a la iniciativa <strong>«ORIGINAL»</strong>, que permite a los usuarios averiguar si su NerdQX es original. Más información al respecto",
-    "ABOUT_NERDQX_ORIGINAL": " <u>aquí</u>"
+    "ABOUT_NERDQX_ORIGINAL": " <u>aquí</u>",
+    "SHUTDOWN": "Apagar",
+    "SHUTDOWN_SUCCESS": "El sistema se está apagando",
+    "SHUTDOWN_FAILED": "Error al apagar el sistema",
+    "LOGS_ALREADY_OPEN_OTHER_TAB": "Los registros ya están abiertos en otra pestaña."
   },
   "SWARM": {
     "TITLE": "Gestión de Enjambre",
@@ -252,6 +289,11 @@
     "SETTINGS_SAVE_FAILED": "No se pudo guardar la configuración de alertas.",
     "TEST_ALERT_SENT": "Alerta de prueba enviada a Discord.",
     "TEST_ALERT_FAILED": "Error al enviar alerta de prueba."
+  },
+  "DISPLAY": {
+    "TITLE": "Pantalla",
+    "BLOCK_FOUND_SCREEN": "Mostrar pantalla de 'Bloque encontrado'",
+    "BLOCK_FOUND_SCREEN_DESC": "Muestra una notificación en la pantalla del minero cuando se encuentra un bloque."
   },
   "ERRORS": {
     "NETWORK_ERROR": "Error de red ocurrido",
@@ -324,6 +366,7 @@
     "STEP_UPDATING_FW": "Actualizando firmware",
     "STEP_DOWNLOADING_WWW": "Descargando sitio web",
     "STEP_UPDATING_WWW": "Actualizando sitio web",
+    "STEP_ERASING_NVS": "Restableciendo configuración",
     "STEP_REBOOTING": "Reiniciando...",
     "STEP_ERROR": "Error",
     "STEP_UNKNOWN": "Desconocido",
@@ -333,7 +376,7 @@
     "FILENAME": "Nombre de archivo",
     "KEEP_CONFIG": "Mantener ajustes",
     "SHOW_PRERELEASES": "Mostrar versiones preliminares",
-    "KEEP_SETTINGS_DISABLED": "El restablecimiento de los ajustes aún no está disponible."
+    "KEEP_SETTINGS_TOOLTIP": "Si está desactivado, la configuración se restablecerá a los valores de fábrica al actualizar."
   },
   "TOAST": {
     "SUCCESS": "Éxito",
@@ -360,15 +403,23 @@
     "SETTINGS": "Configuración de Minería",
     "STRATUM_DIFFICULTY": "Dificultad Stratum Sugerida",
     "STRATUM_DIFFICULTY_HELP": "Dificultad Stratum inicial sugerida",
-    "ENABLE_EXTRANONCE": "Habilitar Suscripción Extranonce"
+    "ENABLE_EXTRANONCE": "Habilitar Suscripción Extranonce",
+    "STRATUM_TLS": "Conexión cifrada (TLS)"
   },
   "FAN": {
     "TITLE": "Controlador de Ventilador",
+    "PRIMARY_CONTROLLER": "ASICs",
+    "SECONDARY_CONTROLLER": "Regulador de voltaje",
     "CONTROLLER": "Controlador de Ventilador",
     "MANUAL": "Manual",
     "AUTODETECT_POLARITY": "Detección Auto de Polaridad",
     "AUTODETECT_RECOMMENDED": "Recomendado",
-    "INVERT_POLARITY": "Invertir Polaridad"
+    "INVERT_POLARITY": "Invertir Polaridad",
+    "USE_FAN1_SETTINGS": "Vinculado",
+    "FAN_SETTINGS_PORTS_HINT": "<strong>Nota:</strong> Al cambiar de modo vinculado, comprueba a qué puertos de ventilador están conectados los ventiladores antes de guardar.",
+    "FAN1_CONNECTOR_HINT": "Conecta el <strong>ventilador ASIC</strong> al conector <strong>{{connector}}</strong>.",
+    "FAN2_CONNECTOR_HINT": "Conecta el <strong>ventilador del regulador de voltaje</strong> al conector <strong>{{connector}}</strong>.",
+    "FAN_LINKED_HINT": "El ventilador VReg sigue la salida del ventilador ASIC. En modo PID, el controlador utiliza la temperatura más alta entre ASIC y VReg."
   },
   "MISC": {
     "TITLE": "Configuración Miscelánea",
@@ -390,17 +441,19 @@
     "PROCEED_ANYWAY": "Continuar de Todos Modos"
   },
   "DISCORD": {
-    "TITLE": "Alertas Discord",
-    "ALERTS": "Alertas Discord",
-    "WEBHOOK": "Webhook Discord",
-    "WEBHOOK_URL": "URL Webhook",
-    "WEBHOOK_HELP": "Webhook de la integración de su canal Discord",
-    "CONFIGURE_DESCRIPTION": "Configure qué alertas de Discord desea recibir. El webhook se usa para todos los temas seleccionados.",
-    "MINER_WATCHDOG": "Vigilancia del minero activada",
-    "MINER_WATCHDOG_DESC": "se activa si el dispositivo se reinicia después de fallar al enviar una acción durante 1 hora",
+    "TITLE": "Alertas de Discord",
+    "ALERTS": "Alertas de Discord",
+    "WEBHOOK": "Webhook de Discord",
+    "WEBHOOK_URL": "URL del webhook",
+    "WEBHOOK_HELP": "Webhook de la integración del canal de Discord",
+    "CONFIGURE_DESCRIPTION": "Configura qué alertas de Discord deseas recibir. El webhook se utiliza para todos los temas seleccionados.",
+    "MINER_WATCHDOG": "Watchdog del minero activado",
+    "MINER_WATCHDOG_DESC": "se activa cuando el dispositivo se reinicia tras no enviar ningún share durante 1 hora",
     "BLOCK_FOUND": "Bloque encontrado",
-    "BLOCK_FOUND_DESC": "se activa cuando su minero encuentra un bloque",
-    "TEST": "Prueba"
+    "BLOCK_FOUND_DESC": "se activa cuando tu minero encuentra un bloque",
+    "TEST": "Prueba",
+    "BEST_DIFF_FOUND": "Mejor dificultad encontrada",
+    "BEST_DIFF_FOUND_DESC": "se activa cuando el dispositivo encuentra una nueva mejor dificultad"
   },
   "LANGUAGE": {
     "TITLE": "Idioma / Language",
@@ -445,6 +498,8 @@
     "DAY": "día",
     "HOUR": "hora",
     "MINUTE": "minuto",
+    "HOUR_SHORT": "h",
+    "MINUTE_SHORT": "min",
     "SECOND": "segundo",
     "YEAR_SINGULAR": "año",
     "YEAR_PLURAL": "años",
@@ -479,20 +534,20 @@
     "LOCAL_ONLY": "Diseñado para uso en LAN local (sin HTTPS). No lo expongas a Internet.",
     "OTP_HINT_ENROLLMENT": "Inicia el registro para mostrar un código QR en el dispositivo. Escanéalo con tu autenticador (p. ej., Authy/Google Authenticator) y luego introduce el código de 6 dígitos para activar OTP. Para desactivar también se requiere un código válido. Diseñado solo para LAN local (sin HTTPS).",
     "OTP_NUDGE_TITLE": "Considera activar OTP",
-    "OTP_NUDGE_TEXT": "Ayuda a mitigar ataques oportunistas y automatizados y añade a esta interfaz web una capa básica de protección criptográfica real.",
+    "OTP_NUDGE_TEXT": "La interfaz web no está protegida – activa el OTP para mayor seguridad.",
     "OTP_TITLE": "Se requiere OTP",
     "OTP_FW_HINT": "Introduce el código de 6 dígitos para iniciar la actualización del firmware.",
     "OTP_HINT": "Introduce el código de 6 dígitos para continuar.",
     "OTP_DISABLE_HINT": "Introduce el código de 6 dígitos para desactivar el OTP.",
     "OTP_ENABLE_HINT": "Introduce el código de 6 dígitos para activar el OTP.",
-    "OTP_REMEMBER": "Recordar este dispositivo durante 24h",
+    "OTP_REMEMBER": "Recordar este navegador durante 24 h",
     "SESSION": "Sesión",
     "SESSION_STATUS": "Estado de la sesión",
-    "THIS_DEVICE_TRUSTED": "Este dispositivo es de confianza (24h)",
-    "FORGET_THIS_DEVICE": "Olvidar este dispositivo",
-    "FORGET_THIS_DEVICE_HELP": "Finaliza la confianza de 24h para este dispositivo. Se elimina el token de sesión local; la próxima acción protegida volverá a requerir un código de 6 dígitos.",
-    "THIS_DEVICE_FORGOTTEN": "Este dispositivo ha sido olvidado.",
-    "NO_TRUSTED_DEVICE_HELP": "No hay una sesión de confianza en este dispositivo. Las acciones protegidas pedirán un código de 6 dígitos hasta que elijas «Recordar este dispositivo».",
+    "THIS_DEVICE_TRUSTED": "Este navegador es de confianza (24 h)",
+    "FORGET_THIS_DEVICE": "Olvidar este navegador",
+    "FORGET_THIS_DEVICE_HELP": "Finaliza la confianza de 24 horas para este navegador. Se elimina el token de sesión local — la próxima acción protegida volverá a requerir un código de 6 dígitos.",
+    "THIS_DEVICE_FORGOTTEN": "Este navegador ha sido olvidado.",
+    "NO_TRUSTED_DEVICE_HELP": "No hay una sesión de confianza en este navegador. Las acciones protegidas solicitarán un código de 6 dígitos hasta que elijas « Recordar este navegador ».",
     "NOT_TRUSTED": "No de confianza"
   }
 }

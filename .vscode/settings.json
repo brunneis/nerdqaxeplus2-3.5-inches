@@ -92,13 +92,17 @@
         "variant": "cpp",
         "charconv": "c",
         "span": "c",
-        "format": "c"
+        "format": "c",
+        "unordered_set": "cpp"
     },
-    "editor.formatOnSave": false,
     "cSpell.words": [
         "ssid"
     ],
     "idf.port": "/dev/cu.usbmodem1434301",
     "C_Cpp.intelliSenseEngine": "Tag Parser",
-    "idf.pythonInstallPath": "/opt/esp/python_env/idf5.5_py3.12_env/bin/python"
+    "idf.pythonInstallPath": "/opt/esp/python_env/idf5.5_py3.12_env/bin/python",
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.clang_format_fallbackStyle": "none",
+    "editor.formatOnSave": false,
+    "editor.formatOnType": false
 }

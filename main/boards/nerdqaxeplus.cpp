@@ -46,19 +46,29 @@ NerdQaxePlus::NerdQaxePlus() : Board() {
     m_ifault = (float) (m_imax - 5);
 
     m_numFans = 2;
+    m_fanLabels[0] = "M2"; // ASIC/CPU fan connector
+    m_fanLabels[1] = "M1"; // VReg fan connector
 
     m_maxPin = 70.0;
     m_minPin = 30.0;
     m_maxVin = 13.0;
     m_minVin = 11.0;
+    m_minCurrentA = 0.0f;
+    m_maxCurrentA = 6.0f;
 
-    m_pidSettings.targetTemp = 55;
-    m_pidSettings.p = 600; //   6.00
-    m_pidSettings.i = 10;  //   0.10
-    m_pidSettings.d = 1000; // 10.00
+    m_pidSettings[0].targetTemp = 55;
+    m_pidSettings[0].p = 600; //   6.00
+    m_pidSettings[0].i = 10;  //   0.10
+    m_pidSettings[0].d = 1000; // 10.00
+
+    m_pidSettings[1].targetTemp = 65;  // target temp for vreg
+    m_pidSettings[1].p = 600;  //   6.00
+    m_pidSettings[1].i = 10;   //   0.10
+    m_pidSettings[1].d = 1000; // 10.00
 
     m_asicMaxDifficulty = 1024;
     m_asicMinDifficulty = 256;
+    m_asicMinDifficultyDualPool = 128;
 
 #ifdef NERDQAXEPLUS
     m_theme = new ThemeNerdqaxeplus();
@@ -117,6 +127,8 @@ void NerdQaxePlus::shutdown() {
     LDO_disable();
 
     vTaskDelay(pdMS_TO_TICKS(500));
+
+    Board::shutdown();
 }
 
 bool NerdQaxePlus::initAsics()
@@ -148,6 +160,8 @@ bool NerdQaxePlus::initAsics()
 
     // wait 500ms
     vTaskDelay(pdMS_TO_TICKS(500));
+
+    m_isBuckInitialized = true;
 
     // release reset pin
     gpio_set_level(BM1368_RST_PIN, 1);
@@ -183,6 +197,15 @@ void NerdQaxePlus::requestBuckTelemtry() {
 
 void NerdQaxePlus::requestChipTemps() {
     if (!m_asics) {
+        return;
+    }
+
+    // in shutdown we can't request chip temps via serial, so we
+    // reset it to 0 to prevent stale values
+    if (m_shutdown) {
+        for (int i=0;i<m_asicCount;i++) {
+            setChipTemp(i, 0.0f);
+        }
         return;
     }
 
@@ -256,14 +279,13 @@ float NerdQaxePlus::getTemperature(int index) {
     return TMP1075_read_temperature(index + !!index);
 }
 
+
 float NerdQaxePlus::getVRTemp() {
-    float vrTemp = m_tps->get_temperature();
+    return TMP1075_read_temperature(1);
+}
 
-    // test
-    float tmp = TMP1075_read_temperature(1);
-    ESP_LOGI(TAG, "tmp1075 vs tps: %.2f vs %.2f (diff: %.2f)", tmp, vrTemp, vrTemp - tmp);
-
-    return tmp;
+float NerdQaxePlus::getVRTempInt() {
+    return m_tps->get_temperature();
 }
 
 float NerdQaxePlus::getVin() {
@@ -290,16 +312,67 @@ float NerdQaxePlus::getPout() {
     return m_tps->get_pout();
 }
 
-bool NerdQaxePlus::getPSUFault() {
-    uint16_t vid = m_tps->get_vout_vid();
-    uint8_t status_byte = m_tps->get_status_byte();
+Board::Error NerdQaxePlus::getFault(uint32_t *status) {
+    *status = 0x00000000;
 
-    // if we have 0x97 it means the buck was reset and
-    // restarted with VBOOT. In this case we assume there
-    // is a PSU error
-    // in case of the PSUs over current protection (voltage will drop),
-    // we will see bit 3 "VIN_UV" in the status byte
-    return ((vid == 0x97) || (status_byte & 0x08));
+    uint8_t status_byte = m_tps->get_status_byte();
+    uint8_t status_iout = m_tps->get_status_iout();
+    uint8_t status_vout = m_tps->get_status_vout();
+    uint8_t status_input = m_tps->get_status_input();
+    uint8_t status_temp = m_tps->get_status_temp();
+
+    *status = (static_cast<uint32_t>(status_byte) << 24) |
+              (static_cast<uint32_t>(status_iout) << 16) |
+              (static_cast<uint32_t>(status_vout) << 8)  |
+              (static_cast<uint32_t>(status_input));
+
+    // If +12V is missing, the PMBus device does not respond to I2C reads,
+    // resulting in all bytes being 0xFF due to no ACK.
+    // The combined && check ensures we only flag a PSU fault when *all*
+    // reads failed, avoiding false triggers from single read errors.
+    if (status_byte == 0xff &&
+        status_iout == 0xff &&
+        status_vout == 0xff &&
+        status_temp == 0xff &&
+        status_input == 0xff) {
+        return Board::Error::PSU_FAULT;
+    }
+
+    // Check for output overcurrent fault flag
+    // Bit 7: IOUT_OCF
+    if (status_iout != 0xff && (status_iout & 0x80)) {
+        return Board::Error::IOUT_OC_FAULT;
+    }
+
+    // Check for output voltage fault flags
+    // Bit 7: VOUT_OVF, Bit 4: VOUT_UVF
+    if (status_vout != 0xff && (status_vout & 0x90)) {
+        return Board::Error::VOUT_FAULT;
+    }
+
+    // Check for overtemperature fault flag
+    // Bit 7: OTF
+    if (status_temp != 0xff && (status_temp & 0x80)) {
+        return Board::Error::VREG_TEMP_FAULT;
+    }
+
+    // Check for PSU-level input or state faults
+    // status_input: Bit 7 = VIN_OVF, Bit 4 = VIN_UVF, Bit 2 = IIN_OCF
+    if (status_input != 0xff && (status_input & 0x94)) {
+        return Board::Error::PSU_FAULT;
+    }
+
+    // is buck off? Then something is wrong ...
+    // return general error.
+    // status_byte: Bit 6 = OFF
+    // update: this has wrong behaviour because on eg over temp shutdown
+    // it would trigger PSU error with #40000000 what actually only says the vreg is off
+    // but without any TPS error flag set.
+    //if (status_byte != 0xff && (status_byte & 0x40)) {
+    //    return Board::Error::PSU_FAULT;
+    //}
+
+    return Board::Error::NONE;
 }
 
 bool NerdQaxePlus::selfTest(){

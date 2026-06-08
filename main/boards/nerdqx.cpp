@@ -39,7 +39,7 @@ NerdQX::NerdQX() : NerdQaxePlus2() {
     m_imax = m_numPhases * 30;
     m_ifault = (float) decode_m_ifault(m_numPhases);
     m_asicFrequencies = {495, 500, 525, 550, 575, 600, 625, 650, 675, 700, 725, 750, 777, 800, 825, 850, 875, 900, 925, 950, 975, 1000};
-    m_asicVoltages   = {1085, 1120, 1130, 1140, 1150, 1160, 1170, 1180, 1190, 1200, 1220, 1230, 1240, 1250, 1260, 1270};
+    m_asicVoltages   = {1085, 1120, 1130, 1140, 1150, 1160, 1170, 1180, 1190, 1200, 1220, 1230, 1240, 1250, 1260, 1270, 1280, 1290, 1300, 1310, 1320, 1330, 1340, 1350};
     m_absMaxAsicFrequency = decode_m_absMaxAsicFrequency(m_imax);
     m_defaultAsicFrequency = m_asicFrequency = 777;
     m_defaultAsicVoltageMillis = m_asicVoltageMillis = 1200;
@@ -48,19 +48,22 @@ NerdQX::NerdQX() : NerdQaxePlus2() {
     m_absMaxAsicVoltageMillis = decode_m_absMaxAsicVoltageMillis(m_imax);
     m_initVoltageMillis = m_defaultAsicVoltageMillis;
 
-    m_pidSettings.targetTemp = 58;
-    m_pidSettings.p = 600;  //  6.00
-    m_pidSettings.i = 10;   //  0.10
-    m_pidSettings.d = 1000; // 10.00
+    m_pidSettings[0].targetTemp = 58;
+    m_pidSettings[0].p = 600;  //  6.00
+    m_pidSettings[0].i = 10;   //  0.10
+    m_pidSettings[0].d = 1000; // 10.00
 
     m_flipScreen = true;
-    m_maxPin = 250.0;
+    m_maxPin = 240.0;
     m_minPin = 50.0;
-    m_maxVin = 12.7;
-    m_minVin = 11.7;
+    m_maxVin = 13.0;
+    m_minVin = 11.0;
+    m_minCurrentA = 0.0f;
+    m_maxCurrentA = 20.0f;
 
-    m_asicMinDifficulty = 2048;
-    m_asicMaxDifficulty = 8192;
+    m_asicMaxDifficulty = 4096;
+    m_asicMinDifficulty = 1024;
+    m_asicMinDifficultyDualPool = 256;
 
 #ifdef NERDQX
     m_theme = new ThemeNerdqx();
@@ -92,6 +95,15 @@ bool NerdQX::initBoard() {
 }
 
 void NerdQX::requestChipTemps() {
+    // in shutdown the LDOs are not powered and we can't
+    // measure the chip temps, so we reset it to 0 to prevent stale values
+    if (m_shutdown) {
+        for (int i=0;i<m_asicCount;i++) {
+            setChipTemp(i, 0.0f);
+        }
+        return;
+    }
+
     // don't try when we know we don't have it
     if (!m_hasTMux) {
         ESP_LOGE(TAG, "TMUX not detected.");

@@ -1,6 +1,10 @@
 <!-- update.component.html -->
 
-
+<nb-card *ngIf="currentWebVersion !== '' && currentVersion !== currentWebVersion" class="alert-box">
+Version mismatch!<br/><br/>
+Firmware: {{ currentVersion }}<br/>
+Web-UI: {{ currentWebVersion }}<br/>
+</nb-card>
 <!-- Settings Card (stays separate) -->
 <nb-card>
   <nb-card-header>{{ 'SETTINGS.TITLE' | translate }}</nb-card-header>
@@ -39,7 +43,7 @@
         </div>
       </div>
 
-      <hr>
+      <hr style="border-color: var(--card-divider-color); margin: 20px 0; opacity:1.0;" />
 
       <!-- Row: Selector + prerelease toggle -->
       <!-- Row: Selector -->
@@ -86,7 +90,7 @@
         <div *ngIf="showChangelog" class="changelog-content" [innerHTML]="changelog"></div>
       </div>
 
-      <hr>
+      <hr style="border-color: var(--card-divider-color); margin: 20px 0; opacity:1.0;" />
 
       <!-- Update CTA + progress -->
       <div class="update-section">
@@ -97,8 +101,8 @@
             <nb-icon icon="cloud-download-outline" pack="eva"></nb-icon>&nbsp;
             {{ 'UPDATE.INSTALL_FROM_GITHUB' | translate }}
           </button>
-          <nb-checkbox class="keep-config-toggle" [checked]="true" (click)="$event.preventDefault()"
-            [nbTooltip]="'UPDATE.KEEP_SETTINGS_DISABLED' | translate" nbTooltipPlacement="top">
+          <nb-checkbox class="keep-config-toggle" [formControl]="keepConfigCtrl"
+            [nbTooltip]="'UPDATE.KEEP_SETTINGS_TOOLTIP' | translate" nbTooltipPlacement="top">
             {{ 'UPDATE.KEEP_CONFIG' | translate }}
           </nb-checkbox>
         </div>
@@ -149,7 +153,7 @@
         <small>({{ expectedFileName }})</small>
       </div>
 
-      <hr>
+      <hr style="border-color: var(--card-divider-color); margin: 20px 0; opacity:1.0;" />
 
       <!-- Manual File Upload -->
       <div class="update-section">

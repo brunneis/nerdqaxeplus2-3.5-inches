@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stratum_api.h"
+#include "stratum/stratum_api.h"
 
 typedef struct
 {
@@ -20,6 +20,9 @@ typedef struct
     // effective asic difficulty
     // is limited to [ASIC_MIN_DIFFICULTY...ASIC_MAX_DIFFICULTY]
     uint32_t asic_diff;
+
+    // pool ID
+    int pool_id;
 
     char *jobid;
     char *extranonce2;

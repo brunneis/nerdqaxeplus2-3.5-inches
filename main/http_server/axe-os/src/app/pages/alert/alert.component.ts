@@ -37,6 +37,8 @@ export class AlertComponent implements OnInit {
           // Per-topic toggles
           alertDiscordWatchdogEnable: [data?.alertDiscordWatchdogEnable === 1],
           alertDiscordBlockFoundEnable: [data?.alertDiscordBlockFoundEnable === 1],
+          alertDiscordBestDiffEnable: [data?.alertDiscordBestDiffEnable === 1],
+          showBlockFoundScreenEnable: [data?.showBlockFoundScreenEnable === 1],
 
           // Keep sentinel so users must enter a valid webhook at least once.
           alertDiscordWebhook: ['WEBHOOK', [
@@ -54,6 +56,8 @@ export class AlertComponent implements OnInit {
     const payload: any = {
       alertDiscordWatchdogEnable: !!form.alertDiscordWatchdogEnable,
       alertDiscordBlockFoundEnable: !!form.alertDiscordBlockFoundEnable,
+      alertDiscordBestDiffEnable: !!form.alertDiscordBestDiffEnable,
+      showBlockFoundScreenEnable: !!form.showBlockFoundScreenEnable,
     };
 
     if (form.alertDiscordWebhook !== 'WEBHOOK') {

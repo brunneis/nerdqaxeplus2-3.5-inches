@@ -42,25 +42,28 @@ NerdAxe::NerdAxe() : Board() {
     m_asicVoltages = {1100, 1150, 1200, 1250, 1300};
     m_defaultAsicFrequency = m_asicFrequency = 485;
     m_defaultAsicVoltageMillis = m_asicVoltageMillis = 1200;
-    m_absMaxAsicFrequency = 650;
-    m_absMaxAsicVoltageMillis = 1400;
-    m_fanInvertPolarity = true;
+    // m_absMaxAsicFrequency = 650;
+    // m_absMaxAsicVoltageMillis = 1400;
+    m_fanInvertPolarity = false;
     m_fanPerc = 100;
     m_flipScreen = true;
     m_numTempSensors = 1;
 
-    m_pidSettings.targetTemp = 55;
-    m_pidSettings.p =  400; // 2.00
-    m_pidSettings.i =   10; // 0.1
-    m_pidSettings.d = 1000; // 10.00
+    m_pidSettings[0].targetTemp = 55;
+    m_pidSettings[0].p =  400; // 2.00
+    m_pidSettings[0].i =   10; // 0.1
+    m_pidSettings[0].d = 1000; // 10.00
 
     m_maxPin = 15.0;
     m_minPin = 5.0;
     m_maxVin = 5.5;
     m_minVin = 4.5;
+    m_minCurrentA = 0.0f;
+    m_maxCurrentA = 5.0f;
 
     m_asicMaxDifficulty = 256;
     m_asicMinDifficulty = 64;
+    m_asicMinDifficultyDualPool = 32;
 
 #ifdef NERDAXE
     m_theme = new ThemeNerdaxe();
@@ -132,6 +135,8 @@ bool NerdAxe::initBoard()
 
 void NerdAxe::shutdown() {
     setVoltage(0.0);
+
+    Board::shutdown();
 }
 
 bool NerdAxe::initAsics()
@@ -150,6 +155,8 @@ bool NerdAxe::initAsics()
 
     // wait 500ms
     vTaskDelay(pdMS_TO_TICKS(500));
+
+    m_isBuckInitialized = true;
 
     // release reset pin
     gpio_set_level(BM1366_RST_PIN, 1);

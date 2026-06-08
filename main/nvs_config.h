@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 // Max length 15
-
 #define NVS_CONFIG_WIFI_SSID "wifissid"
 #define NVS_CONFIG_WIFI_PASS "wifipass"
 #define NVS_CONFIG_HOSTNAME "hostname"
@@ -14,11 +13,13 @@
 #define NVS_CONFIG_STRATUM_USER "stratumuser"
 #define NVS_CONFIG_STRATUM_PASS "stratumpass"
 #define NVS_CONFIG_STRATUM_ENONCE_SUB "stratumesub"
+#define NVS_CONFIG_STRATUM_TLS "stratumtls"
 #define NVS_CONFIG_STRATUM_FALLBACK_URL "fbstratumurl"
 #define NVS_CONFIG_STRATUM_FALLBACK_PORT "fbstratumport"
 #define NVS_CONFIG_STRATUM_FALLBACK_USER "fbstratumuser"
 #define NVS_CONFIG_STRATUM_FALLBACK_PASS "fbstratumpass"
 #define NVS_CONFIG_STRATUM_FALLBACK_ENONCE_SUB "fbstratumesub"
+#define NVS_CONFIG_STRATUM_FALLBACK_TLS "fbstratumtls"
 #define NVS_CONFIG_STRATUM_DIFFICULTY "stratumdiff"
 #define NVS_CONFIG_STRATUM_KEEPALIVE "stratum_keep"
 
@@ -27,11 +28,11 @@
 #define NVS_CONFIG_ASIC_JOB_INTERVAL "asicjobinterval"
 #define NVS_CONFIG_FLIP_SCREEN "flipscreen"
 #define NVS_CONFIG_INVERT_SCREEN "invertscreen"
-#define NVS_CONFIG_INVERT_FAN_POLARITY "invertfanpol"
-#define NVS_CONFIG_AUTO_FAN_POLARITY "autofanpol"
+#define NVS_CONFIG_INVERT_FAN_POLARITY "invertfanpol"   // kept for downgrade compatibility
+#define NVS_CONFIG_AUTO_FAN_POLARITY "autofanpol"       // kept for downgrade compatibility
+#define NVS_CONFIG_FAN_PWM_POLARITY "pwmfanpol"         // new setting
 #define NVS_CONFIG_AUTO_FAN_SPEED "autofanspeed"
 #define NVS_CONFIG_FAN_SPEED "fanspeed"
-#define NVS_CONFIG_BEST_DIFF "bestdiff"
 #define NVS_CONFIG_SELF_TEST "selftest"
 #define NVS_CONFIG_AUTO_SCREEN_OFF "autoscreenoff"
 #define NVS_CONFIG_OVERHEAT_TEMP "overheat_temp"
@@ -49,22 +50,49 @@
 #define NVS_CONFIG_PID_I "pid_i"
 #define NVS_CONFIG_PID_D "pid_d"
 
+// Fan channel 1 (independent second fan, e.g. for VR temp)
+#define NVS_CONFIG_FAN1_SPEED    "fan1speed"
+#define NVS_CONFIG_FAN1_MODE     "fan1mode"
+#define NVS_CONFIG_FAN1_PID_TEMP "fan1_pid_temp"
+#define NVS_CONFIG_FAN1_PID_P    "fan1_pid_p"
+#define NVS_CONFIG_FAN1_PID_I    "fan1_pid_i"
+#define NVS_CONFIG_FAN1_PID_D    "fan1_pid_d"
+#define NVS_CONFIG_FAN1_OVERHEAT "fan1_overheat"
+
 #define NVS_CONFIG_ALERT_DISCORD_WATCHDOG_ENABLE "alrt_disc_en"
 #define NVS_CONFIG_ALERT_DISCORD_URL    "alrt_disc_url"
 #define NVS_CONFIG_ALERT_DISCORD_BLOCK_FOUND_ENABLE "alrt_disc_bf_en"
+#define NVS_CONFIG_ALERT_DISCORD_BEST_DIFF "alrt_disc_bd_en"
+
+#define NVS_CONFIG_SHOW_BLOCK_FOUND_ENABLE "block_found_en"
 
 #define NVS_CONFIG_SWARM "swarmconfig"
 
-#define NVS_TOTAL_FOUND_BLOCKS "totalblocks"
-
 #define NVS_CONFIG_VR_FREQUENCY "vr_frequency"
 
+// device global stats
+#define NVS_TOTAL_FOUND_BLOCKS "totalblocks"
+#define NVS_CONFIG_BEST_DIFF "bestdiff"
+
+
+// OTP
 #define NVS_CONFIG_OTP_SECRET "otp_secret"
 #define NVS_CONFIG_OTP_ENABLED "otp_enabled"
 #define NVS_CONFIG_OTP_LAST_STEP "otp_last_step"
 #define NVS_CONFIG_OTP_USED_MASK "otp_used_mask"
 #define NVS_CONFIG_OTP_SESSION_KEY "otp_sess_key"
 #define NVS_CONFIG_OTP_BOOT_ID "otp_boot_id"
+
+#define NVS_CONFIG_POOL_MODE_BALANCE "pool_balance"
+#define NVS_CONFIG_POOL_MODE "pool_mode"
+
+// Stratum V2
+#define NVS_CONFIG_STRATUM_PROTOCOL "sv2_proto"
+#define NVS_CONFIG_SV2_AUTHORITY_PUBKEY "sv2_auth_pk"
+#define NVS_CONFIG_SV2_CHANNEL_TYPE "sv2_chan_type"
+#define NVS_CONFIG_FB_STRATUM_PROTOCOL "fbsv2_proto"
+#define NVS_CONFIG_FB_SV2_AUTHORITY_PUBKEY "fbsv2_authpk"
+#define NVS_CONFIG_FB_SV2_CHANNEL_TYPE "fbsv2_chtype"
 
 #if defined(CONFIG_FAN_MODE_MANUAL)
 #define CONFIG_AUTO_FAN_SPEED_VALUE 0
@@ -87,6 +115,7 @@ namespace Config {
     void nvs_config_set_string(const char* key, const char* value);
     uint16_t nvs_config_get_u16(const char* key, uint16_t default_value);
     void nvs_config_set_u16(const char* key, uint16_t value);
+    bool nvs_config_has_u16(const char* key);
     uint64_t nvs_config_get_u64(const char* key, uint64_t default_value);
     void nvs_config_set_u64(const char* key, uint64_t value);
 
@@ -133,7 +162,8 @@ namespace Config {
     inline uint16_t getOverheatTemp() { return nvs_config_get_u16(NVS_CONFIG_OVERHEAT_TEMP, CONFIG_OVERHEAT_TEMP); }
     inline uint16_t getInfluxPort() { return nvs_config_get_u16(NVS_CONFIG_INFLUX_PORT, CONFIG_INFLUX_PORT); }
     inline uint16_t getTempControlMode() { return nvs_config_get_u16(NVS_CONFIG_AUTO_FAN_SPEED, CONFIG_AUTO_FAN_SPEED_VALUE); }
-
+    inline uint16_t getPoolMode() { return nvs_config_get_u16(NVS_CONFIG_POOL_MODE, 0); }
+    inline uint16_t getPoolBalance() { return nvs_config_get_u16(NVS_CONFIG_POOL_MODE_BALANCE, 50); }
 
     // ---- uint16_t Setters ----
     inline void setAsicFrequency(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_ASIC_FREQ, value); }
@@ -145,11 +175,75 @@ namespace Config {
     inline void setOverheatTemp(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_OVERHEAT_TEMP, value); }
     inline void setInfluxPort(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_INFLUX_PORT, value); }
     inline void setTempControlMode(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_AUTO_FAN_SPEED, value); }
+    inline void setPoolMode(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_POOL_MODE, value); }
+    inline void setPoolBalance(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_POOL_MODE_BALANCE, value); }
 
     inline void setPidTargetTemp(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_PID_TARGET_TEMP, value); }
     inline void setPidP(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_PID_P, value); }
     inline void setPidI(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_PID_I, value); }
     inline void setPidD(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_PID_D, value); }
+
+    // Indexed fan-channel getters (ch=0 → ch0 NVS keys, ch=1 → fan1 NVS keys)
+    // ch0 defaults: mode=CONFIG_AUTO_FAN_SPEED_VALUE, speed=CONFIG_FAN_SPEED, overheat=CONFIG_OVERHEAT_TEMP
+    // ch1 defaults: mode=3 (linked), speed=100%, overheat=80°C
+    inline uint16_t getFanMode(int ch) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_AUTO_FAN_SPEED, CONFIG_AUTO_FAN_SPEED_VALUE)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_MODE, 3);
+    }
+    inline uint16_t getFanManualSpeed(int ch) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_FAN_SPEED, CONFIG_FAN_SPEED)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_SPEED, 100);
+    }
+    inline uint16_t getFanOverheatTemp(int ch) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_OVERHEAT_TEMP, CONFIG_OVERHEAT_TEMP)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_OVERHEAT, CONFIG_OVERHEAT_TEMP);
+    }
+    inline uint16_t getFanPidTargetTemp(int ch, uint16_t d) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_PID_TARGET_TEMP, d)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_PID_TEMP, d);
+    }
+    inline uint16_t getFanPidP(int ch, uint16_t d) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_PID_P, d)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_PID_P, d);
+    }
+    inline uint16_t getFanPidI(int ch, uint16_t d) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_PID_I, d)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_PID_I, d);
+    }
+    inline uint16_t getFanPidD(int ch, uint16_t d) {
+        return ch == 0 ? nvs_config_get_u16(NVS_CONFIG_PID_D, d)
+                       : nvs_config_get_u16(NVS_CONFIG_FAN1_PID_D, d);
+    }
+
+    // Indexed fan-channel setters
+    inline void setFanMode(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_AUTO_FAN_SPEED, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_MODE, v);
+    }
+    inline void setFanManualSpeed(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_FAN_SPEED, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_SPEED, v);
+    }
+    inline void setFanOverheatTemp(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_OVERHEAT_TEMP, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_OVERHEAT, v);
+    }
+    inline void setFanPidTargetTemp(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_PID_TARGET_TEMP, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_PID_TEMP, v);
+    }
+    inline void setFanPidP(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_PID_P, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_PID_P, v);
+    }
+    inline void setFanPidI(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_PID_I, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_PID_I, v);
+    }
+    inline void setFanPidD(int ch, uint16_t v) {
+        if (ch == 0) nvs_config_set_u16(NVS_CONFIG_PID_D, v);
+        else         nvs_config_set_u16(NVS_CONFIG_FAN1_PID_D, v);
+    }
 
     // ---- uint64_t Getters ----
     inline uint64_t getBestDiff() { return nvs_config_get_u64(NVS_CONFIG_BEST_DIFF, 0); }
@@ -169,31 +263,51 @@ namespace Config {
     inline bool isInfluxEnabled() { return nvs_config_get_u16(NVS_CONFIG_INFLUX_ENABLE, CONFIG_INFLUX_ENABLE_VALUE) != 0; }
     inline bool isDiscordWatchdogAlertEnabled() { return nvs_config_get_u16(NVS_CONFIG_ALERT_DISCORD_WATCHDOG_ENABLE, CONFIG_ALERT_DISCORD_WATCHDOG_ENABLE_VALUE) != 0; }
     inline bool isDiscordBlockFoundAlertEnabled() { return nvs_config_get_u16(NVS_CONFIG_ALERT_DISCORD_BLOCK_FOUND_ENABLE, CONFIG_ALERT_DISCORD_BLOCK_FOUND_ENABLE_VALUE) != 0; }
+    inline bool isDiscordBestDiffAlertEnabled() { return nvs_config_get_u16(NVS_CONFIG_ALERT_DISCORD_BEST_DIFF, CONFIG_ALERT_DISCORD_BEST_DIFF_ENABLE_VALUE) != 0; }
     inline bool isStratumKeepaliveEnabled() { return nvs_config_get_u16(NVS_CONFIG_STRATUM_KEEPALIVE, CONFIG_STRATUM_KEEPALIVE_ENABLE_VALUE) != 0; }
     inline bool isStratumEnonceSubscribe() { return nvs_config_get_u16(NVS_CONFIG_STRATUM_ENONCE_SUB, CONFIG_STRATUM_ENONCE_SUBSCRIBE_VALUE) != 0; }
     inline bool isStratumFallbackEnonceSubscribe() { return nvs_config_get_u16(NVS_CONFIG_STRATUM_FALLBACK_ENONCE_SUB, CONFIG_STRATUM_FALLBACK_ENONCE_SUBSCRIBE_VALUE) != 0; }
+    inline bool isStratumTLS() { return nvs_config_get_u16(NVS_CONFIG_STRATUM_TLS, CONFIG_STRATUM_TLS_VALUE) != 0; }
+    inline bool isStratumFallbackTLS() { return nvs_config_get_u16(NVS_CONFIG_STRATUM_FALLBACK_TLS, CONFIG_STRATUM_FALLBACK_TLS_VALUE) != 0; }
+    inline bool isShowBlockFoundEnabled() { return nvs_config_get_u16(NVS_CONFIG_SHOW_BLOCK_FOUND_ENABLE, CONFIG_SHOW_BLOCK_FOUND_ENABLE_VALUE) != 0; }
+
+    // Stratum V2
+    inline uint16_t getStratumProtocol() { return nvs_config_get_u16(NVS_CONFIG_STRATUM_PROTOCOL, 0); }
+    inline void setStratumProtocol(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_STRATUM_PROTOCOL, value); }
+    inline uint16_t getFallbackStratumProtocol() { return nvs_config_get_u16(NVS_CONFIG_FB_STRATUM_PROTOCOL, 0); }
+    inline void setFallbackStratumProtocol(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_FB_STRATUM_PROTOCOL, value); }
+    inline char* getSV2AuthorityPubkey() { return nvs_config_get_string(NVS_CONFIG_SV2_AUTHORITY_PUBKEY, ""); }
+    inline void setSV2AuthorityPubkey(const char* value) { nvs_config_set_string(NVS_CONFIG_SV2_AUTHORITY_PUBKEY, value); }
+    inline char* getFallbackSV2AuthorityPubkey() { return nvs_config_get_string(NVS_CONFIG_FB_SV2_AUTHORITY_PUBKEY, ""); }
+    inline void setFallbackSV2AuthorityPubkey(const char* value) { nvs_config_set_string(NVS_CONFIG_FB_SV2_AUTHORITY_PUBKEY, value); }
+    inline uint16_t getSV2ChannelType() { return nvs_config_get_u16(NVS_CONFIG_SV2_CHANNEL_TYPE, 0); }
+    inline void setSV2ChannelType(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_SV2_CHANNEL_TYPE, value); }
+    inline uint16_t getFallbackSV2ChannelType() { return nvs_config_get_u16(NVS_CONFIG_FB_SV2_CHANNEL_TYPE, 0); }
+    inline void setFallbackSV2ChannelType(uint16_t value) { nvs_config_set_u16(NVS_CONFIG_FB_SV2_CHANNEL_TYPE, value); }
 
     // ---- Boolean Setters ----
     inline void setFlipScreen(bool value) { nvs_config_set_u16(NVS_CONFIG_FLIP_SCREEN, value ? 1 : 0); }
     inline void setInvertScreen(bool value) { nvs_config_set_u16(NVS_CONFIG_INVERT_SCREEN, value ? 1 : 0); }
-    inline void setInvertFanPolarity(bool value) { nvs_config_set_u16(NVS_CONFIG_INVERT_FAN_POLARITY, value ? 1 : 0); }
-    inline void setAutoFanPolarity(bool value) { nvs_config_set_u16(NVS_CONFIG_AUTO_FAN_POLARITY, value ? 1 : 0); }
+    inline void setFanPolarity(bool value) { nvs_config_set_u16(NVS_CONFIG_FAN_PWM_POLARITY, value ? 1 : 0); }
     inline void setSelfTest(bool value) { nvs_config_set_u16(NVS_CONFIG_SELF_TEST, value ? 1 : 0); }
     inline void setAutoScreenOff(bool value) { nvs_config_set_u16(NVS_CONFIG_AUTO_SCREEN_OFF, value ? 1 : 0); }
     inline void setInfluxEnabled(bool value) { nvs_config_set_u16(NVS_CONFIG_INFLUX_ENABLE, value ? 1 : 0); }
     inline void setDiscordWatchdogAlertEnabled(bool value) { nvs_config_set_u16(NVS_CONFIG_ALERT_DISCORD_WATCHDOG_ENABLE, value ? 1 : 0); }
     inline void setDiscordAlertBlockFoundEnabled(bool value) { nvs_config_set_u16(NVS_CONFIG_ALERT_DISCORD_BLOCK_FOUND_ENABLE, value ? 1 : 0); }
+    inline void setDiscordAlertBestDiffEnabled(bool value) { nvs_config_set_u16(NVS_CONFIG_ALERT_DISCORD_BEST_DIFF, value ? 1 : 0); }
     inline void setStratumKeepaliveEnabled(bool value) { nvs_config_set_u16(NVS_CONFIG_STRATUM_KEEPALIVE, value ? 1 : 0); }
     inline void setStratumEnonceSubscribe(bool value) { nvs_config_set_u16(NVS_CONFIG_STRATUM_ENONCE_SUB, value ? 1 : 0); }
     inline void setStratumFallbackEnonceSubscribe(bool value) { nvs_config_set_u16(NVS_CONFIG_STRATUM_FALLBACK_ENONCE_SUB, value ? 1 : 0); }
+    inline void setStratumTLS(bool value) { nvs_config_set_u16(NVS_CONFIG_STRATUM_TLS, value ? 1 : 0); }
+    inline void setStratumFallbackTLS(bool value) { nvs_config_set_u16(NVS_CONFIG_STRATUM_FALLBACK_TLS, value ? 1 : 0); }
+    inline void setShowBlockFoundEnabled(bool value) { nvs_config_set_u16(NVS_CONFIG_SHOW_BLOCK_FOUND_ENABLE, value ? 1 : 0); }
 
     // with board specific default values
     inline uint16_t getAsicFrequency(uint16_t d) { return nvs_config_get_u16(NVS_CONFIG_ASIC_FREQ, d); }
     inline uint16_t getAsicVoltage(uint16_t d) { return nvs_config_get_u16(NVS_CONFIG_ASIC_VOLTAGE, d); }
     inline uint16_t getAsicJobInterval(uint16_t d) { return nvs_config_get_u16(NVS_CONFIG_ASIC_JOB_INTERVAL, d); }
     inline bool isFlipScreenEnabled(bool d) { return nvs_config_get_u16(NVS_CONFIG_FLIP_SCREEN, d ? 1 : 0) != 0; }
-    inline bool isInvertFanPolarityEnabled(bool d) { return nvs_config_get_u16(NVS_CONFIG_INVERT_FAN_POLARITY, d ? 1 : 0) != 0; }
-    inline bool isAutoFanPolarityEnabled(bool d) { return nvs_config_get_u16(NVS_CONFIG_AUTO_FAN_POLARITY, d ? 1 : 0) != 0; }
+    inline bool isFanPolarity(bool d) { return nvs_config_get_u16(NVS_CONFIG_FAN_PWM_POLARITY, d ? 1 : 0) != 0; }
     inline uint16_t getPidTargetTemp(uint16_t d) { return nvs_config_get_u16(NVS_CONFIG_PID_TARGET_TEMP, d); }
     inline uint16_t getPidP(uint16_t d) { return nvs_config_get_u16(NVS_CONFIG_PID_P, d); }
     inline uint16_t getPidI(uint16_t d) { return nvs_config_get_u16(NVS_CONFIG_PID_I, d); }

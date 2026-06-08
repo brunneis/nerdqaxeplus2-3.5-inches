@@ -6,6 +6,7 @@
 
 
 LV_IMG_DECLARE(ui_img_overheat_png);      // overheating screen
+LV_IMG_DECLARE(ui_img_safe_png);
 
 #define LV_FONT_CUSTOM_DECLARE
 LV_FONT_DECLARE(ui_font_DigitalNumbers16);
@@ -52,6 +53,7 @@ protected:
     lv_obj_t *ui_Image4 = nullptr;
     lv_obj_t *ui_lbIPSet = nullptr;
     lv_obj_t *ui_lbVcoreSet = nullptr;
+    lv_obj_t *ui_lbPoolNr = nullptr;
     lv_obj_t *ui_lbFreqSet = nullptr;
     lv_obj_t *ui_lbFanSet = nullptr;
     lv_obj_t *ui_lbPoolSet = nullptr;
@@ -79,9 +81,11 @@ protected:
     lv_obj_t *ui_lblmedFee = nullptr;
     lv_obj_t *ui_lblhighFee = nullptr;
     lv_obj_t *ui_qrScreen = nullptr;
+    lv_obj_t *ui_PowerOffScreen = nullptr;
 
     Board* m_board;
     Theme* m_theme;
+    DisplayDriver *m_display;
 
     lv_color_t* m_qr_canvas_buf = nullptr;
     int         m_qr_canvas_w   = 0;   // == height
@@ -101,7 +105,7 @@ protected:
 public:
     UI();
 
-    void init(Board* board);
+    void init(Board* board, DisplayDriver* display);
 
     void miningScreenInit(void);
     void settingsScreenInit(void);
@@ -111,6 +115,7 @@ public:
     void logScreenInit(void);
     void bTCScreenInit(void);
     void globalStatsScreenInit(void);
+    void powerOffScreenInit(void);
 
     void showErrorOverlay(const char *error_message, uint32_t error_code);
     void hideErrorOverlay();

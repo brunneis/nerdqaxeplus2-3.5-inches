@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "ArduinoJson.h"
 
+#include "stratum_transport.h"
+
 #define MAX_MERKLE_BRANCHES 32
 #define HASH_SIZE 32
 #define COINBASE_SIZE 100
@@ -88,14 +90,14 @@ class StratumApi {
     static size_t hex2bin(const char *hex, uint8_t *bin, size_t bin_len);
 
     // Helper: checks whether the socket is still connected.
-    static int isSocketConnected(int socket);
+    static int isSocketConnected(StratumTransport *transport);
 
     static bool parseMethods(JsonDocument &doc, const char* method_str, StratumApiV1Message *message);
     static bool parseResponses(JsonDocument &doc, StratumApiV1Message *message);
     static bool parseSetupResponses(JsonDocument &doc, StratumApiV1Message *message);
     static bool parseResult(JsonDocument &doc);
 
-    bool send(int socket, const char* message);
+    bool send(StratumTransport *transport, const char* message);
   public:
     StratumApi();
     ~StratumApi();
@@ -105,23 +107,23 @@ class StratumApi {
     char *receiveJsonRpcLine(int sockfd);
 
     // Sends a subscribe message.
-    bool subscribe(int socket, const char *device, const char *asic);
+    bool subscribe(StratumTransport *transport, const char *device, const char *asic);
 
     // Sends a extranonce subscribe message
-    bool entranonceSubscribe(int socket);
+    bool entranonceSubscribe(StratumTransport *transport);
 
     // Sends a suggest-difficulty message.
-    bool suggestDifficulty(int socket, uint32_t difficulty);
+    bool suggestDifficulty(StratumTransport *transport, uint32_t difficulty);
 
     // Sends an authentication message.
-    bool authenticate(int socket, const char *username, const char *pass);
+    bool authenticate(StratumTransport *transport, const char *username, const char *pass);
 
     // Submits a share.
-    bool submitShare(int socket, const char *username, const char *jobid, const char *extranonce_2, uint32_t ntime, uint32_t nonce,
+    bool submitShare(StratumTransport *transport, const char *username, const char *jobid, const char *extranonce_2, uint32_t ntime, uint32_t nonce,
                      uint32_t version);
 
     // Sends a configure-version-rolling message.
-    bool configureVersionRolling(int socket);
+    bool configureVersionRolling(StratumTransport *transport);
 
     // Resets the message ID counter.
     void resetUid();

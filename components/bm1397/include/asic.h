@@ -35,6 +35,13 @@
 #define SLEEP_TIME 20
 #define FREQ_MULT 25.0
 
+static inline int next_power_of_two(int num) {
+    if (num <= 1) return 1;
+    int power = 1;
+    while (power < num) power <<= 1;
+    return power;
+}
+
 #define CLOCK_ORDER_CONTROL_0 0x80
 #define CLOCK_ORDER_CONTROL_1 0x84
 #define ORDERED_CLOCK_ENABLE 0x20
@@ -78,6 +85,8 @@ class Asic {
 protected:
     float m_current_frequency;
     float m_actual_current_frequency;
+    uint32_t m_asicDifficulty;
+    uint8_t m_addressInterval = 2; ///< Chip address spacing (set during init)
 
     void send(uint8_t header, uint8_t *data, uint8_t data_len);
     void send2(uint8_t header, uint8_t b0, uint8_t b1);

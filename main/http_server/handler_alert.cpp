@@ -13,6 +13,9 @@ static const char* TAG = "http_alert";
 
 esp_err_t GET_alert_info(httpd_req_t *req)
 {
+    // close connection when out of scope
+    ConGuard g(http_server, req);
+
     if (is_network_allowed(req) != ESP_OK) {
         return httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
     }
@@ -33,6 +36,8 @@ esp_err_t GET_alert_info(httpd_req_t *req)
     //doc["alertDiscordWebhook"]  = alertDiscordWebhook;
     doc["alertDiscordWatchdogEnable"] = Config::isDiscordWatchdogAlertEnabled() ? 1 : 0;
     doc["alertDiscordBlockFoundEnable"] = Config::isDiscordBlockFoundAlertEnabled() ? 1 : 0;
+    doc["alertDiscordBestDiffEnable"] = Config::isDiscordBestDiffAlertEnabled() ? 1 : 0;
+    doc["showBlockFoundScreenEnable"] = Config::isShowBlockFoundEnabled() ? 1 : 0;
 
     esp_err_t ret = sendJsonResponse(req, doc);
 
@@ -45,6 +50,9 @@ esp_err_t GET_alert_info(httpd_req_t *req)
 
 esp_err_t POST_update_alert(httpd_req_t *req)
 {
+    // close connection when out of scope
+    ConGuard g(http_server, req);
+
     if (is_network_allowed(req) != ESP_OK) {
         return httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
     }
@@ -75,7 +83,12 @@ esp_err_t POST_update_alert(httpd_req_t *req)
     if (doc["alertDiscordBlockFoundEnable"].is<bool>()) {
         Config::setDiscordAlertBlockFoundEnabled(doc["alertDiscordBlockFoundEnable"].as<bool>());
     }
-
+    if (doc["alertDiscordBestDiffEnable"].is<bool>()) {
+        Config::setDiscordAlertBestDiffEnabled(doc["alertDiscordBestDiffEnable"].as<bool>());
+    }
+    if (doc["showBlockFoundScreenEnable"].is<bool>()) {
+        Config::setShowBlockFoundEnabled(doc["showBlockFoundScreenEnable"].as<bool>());
+    }
 
     doc.clear();
 
@@ -84,11 +97,17 @@ esp_err_t POST_update_alert(httpd_req_t *req)
     // reload discord alerter config
     discordAlerter.loadConfig();
 
+    // reload config
+    SYSTEM_MODULE.loadSettings();
+
     return ESP_OK;
 }
 
 esp_err_t POST_test_alert(httpd_req_t *req)
 {
+    // close connection when out of scope
+    ConGuard g(http_server, req);
+
     if (set_cors_headers(req) != ESP_OK) {
         httpd_resp_send_500(req);
         return ESP_FAIL;

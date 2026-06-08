@@ -26,9 +26,25 @@ import { WithCredentialsInterceptor } from './with-credentials.interceptor';
 import { OtpSessionInterceptor } from './services/otp-session.interceptor';
 
 
+export function getAppVersion() {
+  // Placeholder gets replaced by Github workflow
+  const version = '__VERSION__';
+
+  // return empty string if local build
+  return version.includes('VERSION') ? "" : version;
+}
+
 export function createTranslateLoader(http: HttpClient) {
+  // Placeholder gets replaced by Github workflow
   const commit = '__COMMIT__';
-  return new TranslateHttpLoader(http, './assets/i18n/', `.json?v=${commit}`);
+
+  // detect if it's a local build.
+  const isLocal = commit.includes('COMMIT');
+
+  // for local builds don't insert __COMMIT__ into the filename
+  const suffix = isLocal ? '.json' : `.${commit}.json`;
+
+  return new TranslateHttpLoader(http, './assets/i18n/', suffix);
 }
 
 function filterInterceptorRequest(req: HttpRequest<any>): boolean {

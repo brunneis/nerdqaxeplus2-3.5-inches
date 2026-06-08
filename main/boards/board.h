@@ -7,13 +7,28 @@
 #include "nvs_config.h"
 #include "../pid/PID_v1_bc.h"
 
-enum FanPolarityGuess {
-    POLARITY_UNKNOWN,
-    POLARITY_NORMAL,
-    POLARITY_INVERTED
-};
-
 class Board {
+public:
+    enum Error {
+        NONE,
+        TEMP_FAULT,
+        VREG_TEMP_FAULT,
+        PSU_FAULT,
+        IOUT_OC_FAULT,
+        VOUT_FAULT
+    };
+
+    static const char* errorToStr(Error err) {
+        switch (err) {
+            case Error::NONE: return "";
+            case Error::TEMP_FAULT: return "MINER OVERHEATED";
+            case Error::VREG_TEMP_FAULT: return "VREG OVERHEATED";
+            case Error::PSU_FAULT: return "PSU FAULT";
+            case Error::IOUT_OC_FAULT: return "CURRENT PROTECTION";
+            case Error::VOUT_FAULT: return "VOLTAGE PROTECTION";
+            default: return "INVALID ERROR";
+        }
+    }
   protected:
     // general board information
     const char *m_deviceModel;
@@ -30,7 +45,12 @@ class Board {
     bool m_hasHashCounter;
     const char *m_defaultTheme = "cosmic";
 
-    PidSettings m_pidSettings;
+    // Index 0: ASIC/chip-temp PID (fan 0).  Index 1: VR-temp PID (fan 1).
+    // ch1 base defaults (overridden in subclass ctors where needed): 65°C, p=6, i=0.1, d=10.
+    PidSettings m_pidSettings[2] = {{}, {65, 600, 10, 1000}};
+
+    // Human-readable connector labels shown in the web UI
+    const char* m_fanLabels[2] = {"Fan 1", "Fan 2"};
 
     // asic settings
     int m_asicJobIntervalMs;
@@ -53,6 +73,7 @@ class Board {
 
     // asic difficulty settings
     uint32_t m_asicMinDifficulty;
+    uint32_t m_asicMinDifficultyDualPool;
     uint32_t m_asicMaxDifficulty;
 
     // Voltage regulator max temperature
@@ -60,7 +81,6 @@ class Board {
 
     // fans
     bool m_fanInvertPolarity;
-    bool m_fanAutoPolarity;
     float m_fanPerc;
 
     // flip screen
@@ -71,8 +91,12 @@ class Board {
     float m_minPin;
     float m_maxVin;
     float m_minVin;
+    float m_minCurrentA = 0.0f;
+    float m_maxCurrentA = 8.0f; // default for small devices
 
     int m_numFans;
+
+    bool m_shutdown = false;
 
     // display m_theme
     Theme *m_theme = nullptr;
@@ -80,6 +104,7 @@ class Board {
     Asic *m_asics = nullptr;
 
     bool m_isInitialized = false;
+    bool m_isBuckInitialized = false;
 
   public:
     Board();
@@ -112,7 +137,6 @@ class Board {
         }
     }
     virtual void getFanSpeedCh(int channel, uint16_t *rpm) = 0;
-    FanPolarityGuess guessFanPolarity();
 
     virtual int getNumFans() { return m_numFans; }
 
@@ -134,11 +158,14 @@ class Board {
     float getMaxChipTemp();
     float getChipTemp(int nr);
 
-    virtual void shutdown() = 0;
+    virtual void shutdown() {
+        m_shutdown = true;
+    }
 
-    virtual bool getPSUFault()
+    virtual Error getFault(uint32_t *status)
     {
-        return false;
+        *status = 0x00000000;
+        return Error::NONE;
     }
 
     virtual bool selfTest();
@@ -158,10 +185,20 @@ class Board {
         return m_asicMinDifficulty;
     };
 
+    uint32_t getAsicMinDifficultyDualPool()
+    {
+        return m_asicMinDifficultyDualPool;
+    };
+
     bool isInitialized()
     {
         return m_isInitialized;
     };
+
+    bool isBuckInitialized()
+    {
+        return m_isBuckInitialized;
+    }
 
     virtual Asic *getAsics()
     {
@@ -234,6 +271,18 @@ class Board {
         return m_maxVin;
     }
 
+    // Returns the minimum input current (A) for UI gauge scaling
+    float getMinCurrentA()
+        const {
+        return m_minCurrentA;
+    }
+
+    // Returns the maximum input current (A) for UI gauge scaling
+    float getMaxCurrentA()
+        const {
+        return m_maxCurrentA;
+    }
+
     float getVrMaxTemp()
     {
         return m_vr_maxTemp;
@@ -254,13 +303,13 @@ class Board {
         return m_fanInvertPolarity;
     }
 
-    bool isAutoFanPolarityEnabled()
-    {
-        return m_fanAutoPolarity;
+    PidSettings *getPidSettings(int ch = 0) {
+        return &m_pidSettings[ch];
     }
 
-    PidSettings *getPidSettings() {
-        return &m_pidSettings;
+    const char* getFanLabel(int ch) const {
+        if (ch < 0 || ch >= m_numFans) return "";
+        return m_fanLabels[ch];
     }
 
     const std::vector<uint32_t>& getFrequencyOptions() const {
@@ -281,6 +330,14 @@ class Board {
 
     const char* getDefaultTheme() {
         return m_defaultTheme;
+    }
+
+    bool isShutdown() {
+        return m_shutdown;
+    }
+
+    virtual float getVRTempInt() {
+        return 0.0f;
     }
 
 };

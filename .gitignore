@@ -47,3 +47,5 @@ nerdqaxe+.bin
 # Temporary and backup files
 sdkconfig.bak
 *_compressed
+release/
+esp-miner-*.bin

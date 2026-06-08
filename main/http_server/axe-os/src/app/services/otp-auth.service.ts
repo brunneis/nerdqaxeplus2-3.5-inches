@@ -8,6 +8,10 @@ import { OtpDialogComponent, OtpDialogResult } from '../components/otp-dialog/ot
 
 export type EnsureOtpResult = { totp?: string };
 
+export interface EnsureOtpOptions {
+  disableOtp?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OtpAuthService {
     private readonly LS_TOKEN = 'otpSessionToken';
@@ -78,9 +82,14 @@ export class OtpAuthService {
 
     /** Ensure we have either a valid session or a one-shot TOTP. */
     // otp-auth.service.ts
-    ensureOtp$(uri: string, title: string, hint: string, ttlMs = 24 * 60 * 60 * 1000)
+    ensureOtp$(uri: string, title: string, hint: string, options?: EnsureOtpOptions, ttlMs = 24 * 60 * 60 * 1000)
         : Observable<EnsureOtpResult> {
-        return this.system.getInfo(0, uri).pipe(
+
+        if (options?.disableOtp) {
+            return of<EnsureOtpResult>({});
+        }
+
+        return this.system.getInfo(0, 0, uri).pipe(
             take(1),
             switchMap(info => {
                 const otpEnabled = !!info?.otp;
