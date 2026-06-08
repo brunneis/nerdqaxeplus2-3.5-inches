@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, EMPTY } from 'rxjs';
-import { map, switchMap, expand, scan, takeWhile, last } from 'rxjs/operators';
+import { Observable, EMPTY, of } from 'rxjs';
+import { catchError, map, switchMap, expand, scan, takeWhile, last } from 'rxjs/operators';
 
 interface GithubAsset {
   id: number;
@@ -110,7 +110,7 @@ export class GithubUpdateService {
   public getReleases(includePrereleases = false): Observable<GithubRelease[]> {
     const latest$ = this.httpClient.get<GithubRelease>(
       `${this.baseReleasesUrl}/latest`
-    );
+    ).pipe(catchError(() => of(null)));
 
     const selected$ = this.loadReleasesOfType(includePrereleases, 10, 10, 50);
 
@@ -121,7 +121,7 @@ export class GithubUpdateService {
             releases.map(r => ({
               ...r,
               body: r.body || '',
-              isLatest: !includePrereleases && r.id === latest.id
+              isLatest: !includePrereleases && latest !== null && r.id === latest.id
             }))
           )
         )

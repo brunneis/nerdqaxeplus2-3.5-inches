@@ -115,7 +115,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
             (list ?? []).filter(r =>
               r.assets?.some(a => a.name === this.buildFactoryNameFor(r))
             )
-          )
+          ),
+          tap(list => {
+            if (!include) {
+              this.latestStableRelease = list.find(r => r.isLatest) ?? list[0] ?? null;
+              this.updateVersionStatus();
+            }
+          })
         )
       ),
       tap(list => {
