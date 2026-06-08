@@ -42,7 +42,7 @@ export enum UpdateStatus {
 export class GithubUpdateService {
 
   private readonly baseReleasesUrl =
-    'https://api.github.com/repos/brunneis/nerdaxe/releases';
+    'https://api.github.com/repos/brunneis/nerdqaxeplus2-3.5-inches/releases';
 
   constructor(
     private httpClient: HttpClient
