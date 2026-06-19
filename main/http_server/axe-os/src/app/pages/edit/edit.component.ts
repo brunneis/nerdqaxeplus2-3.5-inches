@@ -398,9 +398,14 @@ export class EditComponent implements OnInit {
       const currentValue = this.normalizeValue(current[key]);
       const originalValue = this.normalizeValue(this.originalSettings[key]);
 
-      // Special case: masked password fields
+      // Masked password fields: unchanged if still '*****', changed otherwise
       if (typeof currentValue === 'string' && currentValue === '*****') {
-        continue; // User hasn't changed this field
+        continue;
+      }
+      // Fields not present in original settings (e.g. wifiPass):
+      // if we got past the '*****' check, the user has typed something new
+      if (originalValue === undefined || originalValue === null) {
+        return true;
       }
 
       if (currentValue !== originalValue) {

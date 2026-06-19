@@ -334,7 +334,7 @@ export class SystemService {
   }
 
   public sendAlertTest(uri: string = '', totp?: string): Observable<any> {
-    const headers = totp ? new HttpHeaders({ 'X-OTP-Code': totp }) : undefined;
+    const headers = totp ? new HttpHeaders({ 'X-TOTP': totp }) : undefined;
     return this.httpClient.post(`${uri}/api/alert/test`, {}, {
       responseType: 'text',
       headers,
