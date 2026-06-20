@@ -22,7 +22,6 @@ fi
 for img in "$RAW_IMAGES_DIR"/resized_*.png; do
     if [ -f "$img" ]; then
 
-        
         echo "Optimizing image..."
         pngquant --quality=60-80 "$img" -o "${img}_compressed"
         optipng -o7 "${img}_compressed"
@@ -32,10 +31,9 @@ for img in "$RAW_IMAGES_DIR"/resized_*.png; do
         screenname="${filename#resized_}"
 
         echo "Converting $filename to $screenname..."
-        
         # Run the converter
         python3 "$CONVERTER_SCRIPT" "$THEME" "${img}_compressed" "$screenname"
-        
+
         if [ $? -eq 0 ]; then
             echo "✓ Successfully converted $screenname"
         else

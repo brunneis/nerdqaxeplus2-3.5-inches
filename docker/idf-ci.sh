@@ -5,6 +5,6 @@ cd $rpath
 
 docker run --rm -v /dev:/dev --privileged \
     -e BOARD="${BOARD:-NERDQAXEPLUS2}" \
-    -e BIGSCREEN="${BIGSCREEN:-0}" \
+    -e BIGSCREEN="${BIGSCREEN:-1}" \
     -v "$rpath":/home/builder/project \
     esp-idf-builder idf.py "$@"

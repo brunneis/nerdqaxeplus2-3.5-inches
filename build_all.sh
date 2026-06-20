@@ -58,9 +58,9 @@ fi
 echo ""
 echo -e "${BLUE}Step 1/5: Configuring target ESP32-S3${NC}"
 if [ "$USE_DOCKER" = true ]; then
-    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" ./docker/idf-ci.sh set-target esp32-s3
+    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" ./docker/idf-ci.sh set-target esp32s3
 else
-    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" idf.py set-target esp32-s3
+    BOARD="$BOARD" BIGSCREEN="$BIGSCREEN" idf.py set-target esp32s3
 fi
 
 echo ""
@@ -78,7 +78,15 @@ echo "  Created ${OUTPUT_DIR}/${OTA_BIN}"
 
 echo ""
 echo -e "${BLUE}Step 4/5: Generating complete factory binary...${NC}"
-./merge_bin.sh "${OUTPUT_DIR}/${FACTORY_BIN}"
+if [ "$USE_DOCKER" = true ]; then
+    docker run --rm -v /dev:/dev --privileged \
+        -e BOARD="$BOARD" \
+        -e BIGSCREEN="$BIGSCREEN" \
+        -v "$PWD":/home/builder/project \
+        esp-idf-builder bash -lc "cd /home/builder/project && ./merge_bin.sh '${OUTPUT_DIR}/${FACTORY_BIN}'"
+else
+    ./merge_bin.sh "${OUTPUT_DIR}/${FACTORY_BIN}"
+fi
 
 echo ""
 echo -e "${BLUE}Step 5/5: Final binaries ready in ${OUTPUT_DIR}/...${NC}"

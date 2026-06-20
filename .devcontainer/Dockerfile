@@ -12,7 +12,7 @@ RUN apt-get update \
   libpixman-1-0 \
   linux-tools-virtual \
   imagemagick \
-  optipng \ 
+  optipng \
   pngquant \
   && rm -rf /var/lib/apt/lists/*
 
@@ -26,9 +26,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-
 RUN npm install -g lv_img_conv
-    
+
 # QEMU
 ENV QEMU_REL=esp-develop-20220919
 ENV QEMU_SHA256=f6565d3f0d1e463a63a7f81aec94cce62df662bd42fc7606de4b4418ed55f870

@@ -755,9 +755,6 @@ lv_obj_t *DisplayDriver::initTDisplayS3(void)
         esp_lcd_panel_mirror(panel_handle, false, true);
     }
 
-    // Change later
-    esp_lcd_panel_mirror(panel_handle, false, false);
-
     // the gap is LCD panel specific, even panels with the same driver IC, can have different gap value
     esp_lcd_panel_set_gap(panel_handle, 0, 0);
 
