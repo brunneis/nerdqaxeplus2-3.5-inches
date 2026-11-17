@@ -4,6 +4,8 @@
 Run once on TRUE_COLOR generated images; --check also accepts indexed output.
 No image libraries or color quantization: the original RGB565 values are retained.
 LVGL's indexed palette uses BGRA8888 and converts it back with lv_color_make.
+The fork's RGB565 assets are MSB-first: sdkconfig.defaults enables
+CONFIG_LV_COLOR_16_SWAP=y (lv_conf.h is skipped in the real build).
 """
 import argparse
 import pathlib
@@ -25,16 +27,19 @@ def decode_indexed(raw):
         b, g, r, a = raw[i * 4:i * 4 + 4]
         assert a == 255
         palette.append(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))
-    return b''.join(palette[i].to_bytes(2, 'little') for i in raw[1024:])
+    return b''.join(palette[i].to_bytes(2, 'big') for i in raw[1024:])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='compare indexed files to original port commit')
     parser.add_argument('--reference', default='5b0b3507', help='original RGB565 git revision')
+    parser.add_argument('--from-reference', action='store_true', help='regenerate directly from original RGB565 git revision')
     args = parser.parse_args()
+    assert 'CONFIG_LV_COLOR_16_SWAP=y' in (ROOT / 'sdkconfig.defaults').read_text()
     for path in sorted((ROOT / DIRECTORY).glob('ui_img*.c')):
-        text = path.read_text()
+        text = (subprocess.check_output(['git', 'show', f'{args.reference}:{path.relative_to(ROOT)}'], cwd=ROOT).decode()
+                if args.from_reference else path.read_text())
         raw = data(text)
         if args.check:
             original = subprocess.check_output(['git', 'show', f'{args.reference}:{path.relative_to(ROOT)}'], cwd=ROOT).decode()
@@ -45,7 +50,7 @@ def main():
             continue
         assert 'LV_IMG_CF_TRUE_COLOR' in text, 'Expected original TRUE_COLOR input'
         assert len(raw) == 480 * 320 * 2
-        values = [int.from_bytes(raw[i:i+2], 'little') for i in range(0, len(raw), 2)]
+        values = [int.from_bytes(raw[i:i+2], 'big') for i in range(0, len(raw), 2)]
         colors = list(dict.fromkeys(values))
         assert len(colors) <= 256
         lookup = {value: i for i, value in enumerate(colors)}
