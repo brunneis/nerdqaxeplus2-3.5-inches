@@ -1,4 +1,5 @@
 #include <string.h>
+#include "ota_session.h"
 
 #include "esp_ota_ops.h"
 #include "esp_http_server.h"
@@ -19,23 +20,28 @@ extern bool enter_recovery;
 #define OTA_CHUNK_SIZE 2048
 #define ESP_APP_IMAGE_MAGIC 0xE9
 
-// Receive up to `len` bytes; retries on socket timeouts.
+// Receive up to `len` bytes; tolerate at most two consecutive socket timeouts.
 // Returns the number of bytes received, or <= 0 on error/disconnect.
 static int recv_retry(httpd_req_t *req, char *dst, int len)
 {
-    for (;;) {
+    for (int attempt = 0; attempt < 3; ++attempt) {
         int n = httpd_req_recv(req, dst, len);
-        if (n == HTTPD_SOCK_ERR_TIMEOUT) {
-            continue;
+        if (n != HTTPD_SOCK_ERR_TIMEOUT) {
+            return n;
         }
-        return n;
     }
+    return HTTPD_SOCK_ERR_TIMEOUT;
 }
 
 esp_err_t POST_WWW_update(httpd_req_t *req)
 {
     // close connection when out of scope
     ConGuard g(http_server, req);
+    OtaSession session;
+    if (!session) {
+        httpd_resp_set_status(req, "409 Conflict");
+        return httpd_resp_sendstr(req, "Another update is in progress");
+    }
 
     if (is_network_allowed(req) != ESP_OK) {
         return httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
@@ -112,8 +118,10 @@ esp_err_t POST_WWW_update(httpd_req_t *req)
             if (!(offset & 0xffff)) {
                 ESP_LOGI(TAG, "flashing to %08x", (unsigned) offset);
             }
-            if (esp_partition_write(www_partition, (size_t) offset, (const void *) buf, (size_t) len) != ESP_OK) {
-                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Write Error");
+            if (esp_partition_write(www_partition, (size_t) offset, buf, (size_t) len) != ESP_OK ||
+                esp_partition_read(www_partition, (size_t) offset, buf, (size_t) len) != ESP_OK ||
+                memcmp(buf, image + offset, (size_t) len) != 0) {
+                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "WWW write or verification failed");
                 return ESP_FAIL;
             }
         }
@@ -133,6 +141,11 @@ esp_err_t POST_OTA_update(httpd_req_t *req)
 {
     // close connection when out of scope
     ConGuard g(http_server, req);
+    OtaSession session;
+    if (!session) {
+        httpd_resp_set_status(req, "409 Conflict");
+        return httpd_resp_sendstr(req, "Another update is in progress");
+    }
 
     if (is_network_allowed(req) != ESP_OK) {
         return httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");

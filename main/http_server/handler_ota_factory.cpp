@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include "ota_session.h"
 
 #include "crt_bundle.h"
 #include "esp_http_client.h"
@@ -53,8 +54,9 @@ esp_err_t http_evt_capture_location(esp_http_client_event_t *evt)
         const char *k = evt->header_key ? evt->header_key : "";
         const char *v = evt->header_value ? evt->header_value : "";
         if (strcasecmp(k, "Location") == 0) {
-            strlcpy(ctx->loc, v, sizeof(ctx->loc)); // full value incl. query if present
-            ESP_LOGI(TAG, "Location: %s", ctx->loc);
+            if (strlcpy(ctx->loc, v, sizeof(ctx->loc)) >= sizeof(ctx->loc)) {
+                ctx->loc[0] = '\0';
+            }
         }
     }
     return ESP_OK;
@@ -120,7 +122,10 @@ esp_err_t FactoryOTAUpdate::follow_redirect(esp_http_client_handle_t client, cha
 {
     const int max_hops = 8;
     for (int hop = 0; hop < max_hops; ++hop) {
-        ESP_ERROR_CHECK_WITHOUT_ABORT(esp_http_client_set_url(client, url));
+        const esp_err_t url_err = esp_http_client_set_url(client, url);
+        if (url_err != ESP_OK) {
+            return url_err;
+        }
 
         ctx->loc[0] = '\0';
         ctx->capture = true;
@@ -154,7 +159,7 @@ esp_err_t FactoryOTAUpdate::follow_redirect(esp_http_client_handle_t client, cha
             continue; // next hop
         }
 
-        if (status != 200 && status != 206) {
+        if (status != 200) {
             ESP_LOGE(TAG, "unexpected status: %d", status);
             esp_http_client_close(client);
             return ESP_FAIL;
@@ -207,7 +212,9 @@ esp_err_t FactoryOTAUpdate::do_www_update(uint8_t *data)
         if (!(offset & 0xffff)) {
             ESP_LOGI(TAG, "flashing to %08lx", offset);
         }
-        if (esp_partition_write(www_partition, offset, (const void *) buf, CHUNK_SIZE) != ESP_OK) {
+        if (esp_partition_write(www_partition, offset, buf, CHUNK_SIZE) != ESP_OK ||
+            esp_partition_read(www_partition, offset, buf, CHUNK_SIZE) != ESP_OK ||
+            memcmp(buf, data + offset, CHUNK_SIZE) != 0) {
             return ESP_FAIL;
         }
         addWwwBytes(CHUNK_SIZE);
@@ -294,6 +301,13 @@ esp_err_t FactoryOTAUpdate::erase_nvs_partition()
 
 esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool keep_config)
 {
+    resetProgress();
+    OtaSession session;
+    if (!session) {
+        setStep(OtaStep::ERROR, "OTA: another update is in progress");
+        return ESP_ERR_INVALID_STATE;
+    }
+
     // use PSRAM for the long URL and WWW buffer; guards are installed right away
     // so nothing leaks if a later allocation fails
     char *url = (char *) MALLOC(URL_SIZE);
@@ -341,7 +355,6 @@ esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool 
     // Also make the server close after response
     esp_http_client_set_header(client, "Connection", "close");
 
-    resetProgress();
     setStep(OtaStep::RESOLVING_URL, "OTA: resolving/following redirects");
 
     esp_err_t err = follow_redirect(client, url, URL_SIZE, redir_ctx);
@@ -435,13 +448,8 @@ esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool 
 
         err = do_www_update(wwwData);
         if (err != ESP_OK) {
-            // The www partition is now incomplete and the device will come up in
-            // recovery mode. Activate the new firmware anyway, so recovering with
-            // the www.bin of this release gives a consistent firmware + web UI pair.
-            ESP_LOGE(TAG, "www update failed: %s", esp_err_to_name(err));
-            if (esp_ota_set_boot_partition(new_app) != ESP_OK) {
-                ESP_LOGE(TAG, "activating new firmware failed too");
-            }
+            // Leave the boot partition unchanged. There is only one WWW slot;
+            // if flash failed after erase, use /recovery to restore the old web.
             return fail_and_restart("www update failed", err);
         }
         ESP_LOGI(TAG, "www update successful!");

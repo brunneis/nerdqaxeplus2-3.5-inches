@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     EXPECT(!www_image_looks_valid(img.data(), img.size(), part));              // erased / empty
     std::memcpy(&img[4096], "/index.html.gz", 14);
     img[0] = 0x01;
-    EXPECT(www_image_looks_valid(img.data(), img.size(), part));
+    EXPECT(!www_image_looks_valid(img.data(), img.size(), part)); // marker alone is insufficient
     EXPECT(!www_image_looks_valid(img.data(), img.size() - 1, part));          // truncated
     EXPECT(!www_image_looks_valid(img.data(), 0, part));
     EXPECT(!www_image_looks_valid(nullptr, part, part));
@@ -58,7 +58,8 @@ int main(int argc, char **argv)
         std::fclose(f);
         EXPECT(n == part);
         EXPECT(www_image_looks_valid(real.data(), n, part));
-        // a firmware image must not pass as www.bin
+        real[252] ^= 1; // break the first block's SPIFFS magic
+        EXPECT(!www_image_looks_valid(real.data(), n, part));
     }
 
     if (failures) {
