@@ -42,6 +42,9 @@ jobs:
           exit 1
         fi
         echo "VERSION_TAG=${version}" >> "$GITHUB_ENV"
+        # IDF reads version.txt before falling back to git describe --dirty.
+        # Web metadata substitutions below are intentional build-time changes.
+        printf '%s\n' "$version" > version.txt
 
     - name: Insert web UI version
       run: |
