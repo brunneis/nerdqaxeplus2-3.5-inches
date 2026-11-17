@@ -25,6 +25,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        fetch-depth: 0
 
     - name: Get version tag
       run: |
@@ -32,7 +35,11 @@ jobs:
         if [ "${{ github.ref_type }}" == "tag" ]; then
           version="${{ github.ref_name }}"
         else
-          version=$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)
+          version=$(git describe --tags --exact-match)
+        fi
+        if [[ "$version" != v*-480x320 ]] || [ "$(git rev-parse "refs/tags/${version}^{commit}")" != "$(git rev-parse HEAD)" ]; then
+          echo "::error::Select an exact fork release tag ending in -480x320."
+          exit 1
         fi
         echo "VERSION_TAG=${version}" >> "$GITHUB_ENV"
 
