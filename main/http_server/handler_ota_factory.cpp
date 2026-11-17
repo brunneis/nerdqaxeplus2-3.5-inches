@@ -18,6 +18,7 @@
 #include "http_utils.h"
 #include "macros.h"
 #include "psram_allocator.h"
+#include "ota_validation.h"
 
 #define GITHUB_REPO "https://github.com/brunneis/nerdqaxeplus2-3.5-inches/"
 
@@ -141,7 +142,12 @@ esp_err_t FactoryOTAUpdate::follow_redirect(esp_http_client_handle_t client, cha
                 esp_http_client_close(client);
                 return ESP_ERR_INVALID_RESPONSE;
             }
-            // GitHub/codeload send absolute URLs in Location -> just copy
+            // GitHub sends absolute URLs in Location; only follow them to GitHub over HTTPS
+            if (!is_allowed_redirect(ctx->loc)) {
+                ESP_LOGE(TAG, "redirect target not allowed");
+                esp_http_client_close(client);
+                return ESP_ERR_INVALID_RESPONSE;
+            }
             strlcpy(url, ctx->loc, (size_t) url_len);
 
             esp_http_client_close(client);
@@ -186,7 +192,11 @@ esp_err_t FactoryOTAUpdate::do_www_update(uint8_t *data)
 
     // Erase the entire www partition before writing
     ESP_LOGI(TAG, "erasing www partition ...");
-    ESP_ERROR_CHECK(esp_partition_erase_range(www_partition, 0, www_partition->size));
+    esp_err_t err = esp_partition_erase_range(www_partition, 0, www_partition->size);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "erasing www partition failed: %s", esp_err_to_name(err));
+        return err;
+    }
     ESP_LOGI(TAG, "erasing done");
 
     for (uint32_t offset = 0; offset < to_write; offset += CHUNK_SIZE) {
@@ -206,9 +216,12 @@ esp_err_t FactoryOTAUpdate::do_www_update(uint8_t *data)
 }
 
 /*
- * Handle OTA file upload
+ * Stream the firmware part of the factory image into the next OTA partition and
+ * validate it. The new image is NOT activated here: the caller switches the boot
+ * partition only after the web UI was written too, so an interrupted update
+ * never boots new firmware with an old or missing web UI.
  */
-esp_err_t FactoryOTAUpdate::do_firmware_update(esp_http_client_handle_t client)
+esp_err_t FactoryOTAUpdate::do_firmware_update(esp_http_client_handle_t client, const esp_partition_t **out_partition)
 {
     // use internal RAM for temp buffer
     uint8_t *buf = (uint8_t *) malloc(CHUNK_SIZE);
@@ -217,9 +230,18 @@ esp_err_t FactoryOTAUpdate::do_firmware_update(esp_http_client_handle_t client)
     // frees memory when out of scope
     MemoryGuard gc(buf);
 
-    esp_ota_handle_t ota_handle;
     const esp_partition_t *ota_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_ERROR_CHECK(esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle));
+    if (!ota_partition) {
+        ESP_LOGE(TAG, "no OTA partition available");
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    esp_ota_handle_t ota_handle;
+    esp_err_t begin_err = esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle);
+    if (begin_err != ESP_OK) {
+        ESP_LOGE(TAG, "esp_ota_begin failed: %s", esp_err_to_name(begin_err));
+        return begin_err;
+    }
 
     for (uint32_t offset = 0; offset < FW_LEN_BYTES; offset += CHUNK_SIZE) {
         esp_err_t err = http_read_chunk(client, buf);
@@ -241,11 +263,14 @@ esp_err_t FactoryOTAUpdate::do_firmware_update(esp_http_client_handle_t client)
         addFwBytes(CHUNK_SIZE);
     }
 
-    // Validate and switch to new OTA image and reboot later
-    if (esp_ota_end(ota_handle) != ESP_OK || esp_ota_set_boot_partition(ota_partition) != ESP_OK) {
-        return ESP_FAIL;
+    // Validate the new image (does not activate it)
+    esp_err_t end_err = esp_ota_end(ota_handle);
+    if (end_err != ESP_OK) {
+        ESP_LOGE(TAG, "firmware image validation failed: %s", esp_err_to_name(end_err));
+        return end_err;
     }
 
+    *out_partition = ota_partition;
     return ESP_OK;
 }
 
@@ -269,23 +294,23 @@ esp_err_t FactoryOTAUpdate::erase_nvs_partition()
 
 esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool keep_config)
 {
-    // use PSRAM for the long URL and WWW buffer
+    // use PSRAM for the long URL and WWW buffer; guards are installed right away
+    // so nothing leaks if a later allocation fails
     char *url = (char *) MALLOC(URL_SIZE);
-    CHECK_ALLOC(url);
+    MemoryGuard gcUrl(url);
 
-    // PSRAM
     uint8_t *wwwData = (uint8_t *) MALLOC(WWW_LEN_BYTES);
-    CHECK_ALLOC(wwwData);
+    MemoryGuard gcwwwData(wwwData);
 
     // calloc initializes with 0
-    // PSRAM
     redirect_ctx_t *redir_ctx = (redirect_ctx_t *) CALLOC(1, sizeof(redirect_ctx_t));
-    CHECK_ALLOC(redir_ctx);
-
-    // release memory when out of scope
-    MemoryGuard gcUrl(url);
-    MemoryGuard gcwwwData(wwwData);
     MemoryGuard gcCtx(redir_ctx);
+
+    if (!url || !wwwData || !redir_ctx) {
+        ESP_LOGE(TAG, "OTA: out of memory");
+        setStep(OtaStep::ERROR, "OTA: error");
+        return ESP_ERR_NO_MEM;
+    }
 
     strlcpy(url, start_url, URL_SIZE);
 
@@ -358,19 +383,31 @@ esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool 
         // The device will reboot after the update anyway.
         POWER_MANAGEMENT_MODULE.shutdown();
 
+        // From here on the ASICs are off. Any failure must reboot the device,
+        // otherwise it would stay up without mining until restarted by hand.
+        auto fail_and_restart = [&](const char *what, esp_err_t e) -> esp_err_t {
+            ESP_LOGE(TAG, "%s: %s - restarting to resume mining", what, esp_err_to_name(e));
+            setStep(OtaStep::ERROR, "OTA: error");
+            // give the web UI a moment to show the error state
+            vTaskDelay(pdMS_TO_TICKS(3000));
+            POWER_MANAGEMENT_MODULE.restart();
+            return e; // unreachable
+        };
+
         ESP_LOGI(TAG, "performing firmware update ...");
 
         setStep(OtaStep::UPDATING_FW, "OTA: updating firmware");
 
-        err = do_firmware_update(client);
+        // Writes and validates the new firmware but does not activate it yet.
+        const esp_partition_t *new_app = nullptr;
+        err = do_firmware_update(client, &new_app);
         if (err != ESP_OK) {
-            ESP_LOGE(TAG, "firmware update failed");
-            setStep(OtaStep::ERROR, "OTA: error");
-            return err;
+            // boot partition untouched: old firmware + old web UI stay intact
+            return fail_and_restart("firmware update failed", err);
         }
-        ESP_LOGI(TAG, "firmware update successful!");
+        ESP_LOGI(TAG, "firmware written and validated (not active yet)");
 
-        // Buffer the entire WWW into PSRAM (safer single-partition strategy)
+        // Buffer the entire WWW into PSRAM before touching the www partition
         ESP_LOGI(TAG, "download www binary ...");
 
         setStep(OtaStep::DOWNLOADING_WWW, "OTA: downloading www");
@@ -379,11 +416,17 @@ esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool 
         for (int i = 0; i < chunks; ++i) {
             esp_err_t e = http_read_chunk(client, &wwwData[i * CHUNK_SIZE]);
             if (e != ESP_OK) {
-                ESP_LOGE(TAG, "error reading www binary");
-                POWER_MANAGEMENT_MODULE.restart();
-                return e;
+                // nothing activated or erased yet: old firmware + old web UI stay intact
+                return fail_and_restart("error reading www binary", e);
             }
             addWwwRecvBytes(CHUNK_SIZE);
+        }
+
+        const esp_partition_t *www_partition =
+            esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, "www");
+        if (!www_partition || !www_image_looks_valid(wwwData, WWW_LEN_BYTES, www_partition->size)) {
+            // nothing activated or erased yet: old firmware + old web UI stay intact
+            return fail_and_restart("downloaded www image is invalid", ESP_ERR_INVALID_RESPONSE);
         }
 
         ESP_LOGI(TAG, "performing www update ...");
@@ -392,12 +435,23 @@ esp_err_t FactoryOTAUpdate::ota_update_from_factory(const char *start_url, bool 
 
         err = do_www_update(wwwData);
         if (err != ESP_OK) {
-            ESP_LOGE(TAG, "www update failed");
-            // Firmware already switched; ensure deterministic state by rebooting
-            POWER_MANAGEMENT_MODULE.restart();
-            return err;
+            // The www partition is now incomplete and the device will come up in
+            // recovery mode. Activate the new firmware anyway, so recovering with
+            // the www.bin of this release gives a consistent firmware + web UI pair.
+            ESP_LOGE(TAG, "www update failed: %s", esp_err_to_name(err));
+            if (esp_ota_set_boot_partition(new_app) != ESP_OK) {
+                ESP_LOGE(TAG, "activating new firmware failed too");
+            }
+            return fail_and_restart("www update failed", err);
         }
         ESP_LOGI(TAG, "www update successful!");
+
+        // Firmware and web UI are both written: only now switch to the new firmware
+        err = esp_ota_set_boot_partition(new_app);
+        if (err != ESP_OK) {
+            return fail_and_restart("activating new firmware failed", err);
+        }
+        ESP_LOGI(TAG, "new firmware activated");
 
         if (!keep_config) {
             setStep(OtaStep::ERASING_NVS, "OTA: erasing NVS (reset to factory defaults)");
@@ -558,6 +612,7 @@ void FactoryOTAUpdate::resetProgress()
     pthread_mutex_lock(&m_mutex);
     m_fw_written = 0;
     m_www_written = 0;
+    m_www_recv = 0;
     m_step = OtaStep::IDLE;
     pthread_mutex_unlock(&m_mutex);
 }
