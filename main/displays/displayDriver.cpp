@@ -781,14 +781,11 @@ lv_obj_t *DisplayDriver::initTDisplayS3(void)
     esp_lcd_panel_swap_xy(panel_handle, true);
 
     Board *board = SYSTEM_MODULE.getBoard();
-    if (!board->isFlipScreenEnabled()) {
-        esp_lcd_panel_mirror(panel_handle, true, false);
-    } else {
-        esp_lcd_panel_mirror(panel_handle, false, true);
-    }
+    bool flip_screen = board->isFlipScreenEnabled();
+    esp_lcd_panel_mirror(panel_handle, flip_screen, flip_screen);
 
     // the gap is LCD panel specific, even panels with the same driver IC, can have different gap value
-    esp_lcd_panel_set_gap(panel_handle, 0, 35);
+    esp_lcd_panel_set_gap(panel_handle, 0, 0);
 
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 
@@ -837,10 +834,12 @@ void DisplayDriver::updateHashrate(System *module, StratumManager* manager, floa
     char strData[20];
     char strDataActive[20];
 
-    float hr = SYSTEM_MODULE.getCurrentHashrate() / 1000.0f;
+    float hashrate = module->getCurrentHashrate();
+    float hr = hashrate / 1000.0f;
     float efficiency = (hr > 0) ? power / hr : 10000.0f;
-    float hashrate = SYSTEM_MODULE.getCurrentHashrate();
-    formatHashrate(strData, sizeof(strData), hashrate);
+
+    // Display as integer to add more space
+    snprintf(strData, sizeof(strData), "%d", (int) (hashrate + 0.5f));
 
     lv_label_set_text(m_ui->ui_lbHashrate, strData);    // Update hashrate
 

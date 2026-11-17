@@ -14,6 +14,7 @@ LV_IMG_DECLARE(ui_img_wifi_png);
 #define LV_FONT_CUSTOM_DECLARE
 LV_FONT_DECLARE(ui_font_DigitalNumbers16);
 LV_FONT_DECLARE(ui_font_DigitalNumbers28);
+LV_FONT_DECLARE(ui_font_DigitalNumbers40);
 LV_FONT_DECLARE(ui_font_OpenSansBold13);
 LV_FONT_DECLARE(ui_font_OpenSansBold14);
 LV_FONT_DECLARE(ui_font_OpenSansBold45);

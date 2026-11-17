@@ -1,4 +1,4 @@
-FROM espressif/idf
+FROM espressif/idf:v5.5.1
 
 ARG DEBIAN_FRONTEND=nointeractive
 
@@ -11,9 +11,22 @@ RUN apt-get update \
   libnuma1 \
   libpixman-1-0 \
   linux-tools-virtual \
+  imagemagick \
+  optipng \
+  pngquant \
   && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/local/bin/usbip usbip `ls /usr/lib/linux-tools/*/usbip | tail -n1` 20
+
+# Install Node.js 20.x and Python dependencies
+RUN apt-get update && \
+    apt-get install -y curl python3-pip git vim && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g lv_img_conv
 
 # QEMU
 ENV QEMU_REL=esp-develop-20220919
@@ -30,6 +43,7 @@ RUN wget --no-verbose ${QEMU_URL} \
   && rm ${QEMU_DIST}
 
 ENV PATH=/opt/qemu/bin:${PATH}
+ENV BOARD=NERDQAXEPLUS2
 
 RUN echo "source /opt/esp/idf/export.sh > /dev/null 2>&1" >> ~/.bashrc
 

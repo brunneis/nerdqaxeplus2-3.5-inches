@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, EMPTY } from 'rxjs';
-import { map, switchMap, expand, scan, takeWhile, last } from 'rxjs/operators';
+import { Observable, EMPTY, of } from 'rxjs';
+import { catchError, map, switchMap, expand, scan, takeWhile, last } from 'rxjs/operators';
 
 interface GithubAsset {
   id: number;
@@ -42,7 +42,7 @@ export enum UpdateStatus {
 export class GithubUpdateService {
 
   private readonly baseReleasesUrl =
-    'https://api.github.com/repos/shufps/ESP-Miner-NerdQAxePlus/releases';
+    'https://api.github.com/repos/brunneis/nerdqaxeplus2-3.5-inches/releases';
 
   constructor(
     private httpClient: HttpClient
@@ -110,7 +110,7 @@ export class GithubUpdateService {
   public getReleases(includePrereleases = false): Observable<GithubRelease[]> {
     const latest$ = this.httpClient.get<GithubRelease>(
       `${this.baseReleasesUrl}/latest`
-    );
+    ).pipe(catchError(() => of(null)));
 
     const selected$ = this.loadReleasesOfType(includePrereleases, 10, 10, 50);
 
@@ -121,7 +121,7 @@ export class GithubUpdateService {
             const list = releases.map(r => ({
               ...r,
               body: r.body || '',
-              isLatest: !includePrereleases && r.id === latest.id
+              isLatest: !includePrereleases && latest !== null && r.id === latest.id
             }));
             // GitHub lists releases by creation date, so e.g. an LTS release made after
             // the latest one would come first. "latest" always goes on top (it is also

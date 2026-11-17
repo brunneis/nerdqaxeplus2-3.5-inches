@@ -1,12 +1,7 @@
-name: Build and Release ESP32 Firmware
+name: Build and Release NerdQAxePlus2 480x320 Firmware
 
 on:
-  workflow_dispatch:  # Manual trigger only
-    inputs:
-      enable_coredump:
-        description: 'Diagnostic build: panic core dump capture + download endpoint. Only published to pre-releases (fails for a stable release); otherwise artifacts only. The dump can leak WiFi/pool credentials to anyone on the LAN unless OTP is enabled on the device.'
-        type: boolean
-        default: false
+  workflow_dispatch:
 
 jobs:
   ca-bundle-test:
@@ -21,306 +16,101 @@ jobs:
   build-and-release:
     needs: ca-bundle-test
     runs-on: ubuntu-latest
-    outputs:
-      version_tag: ${{ steps.version_tag.outputs.version }}
     env:
-      RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
-    strategy:
-      matrix:
-        include:
-          - board: NERDQAXEPLUS
-            upload_www: true
-            label: NerdQAxe+
-          - board: NERDOCTAXEPLUS
-            upload_www: false
-            label: NerdOCTAXE+
-          - board: NERDQAXEPLUS2
-            upload_www: false
-            label: NerdQAxe++
-          - board: NERDAXE
-            upload_www: false
-            label: NerdAxe
-          - board: NERDOCTAXEGAMMA
-            upload_www: false
-            label: NerdOCTAXE-Gamma
-          - board: NERDAXEGAMMA
-            upload_www: false
-            label: NerdAxeGamma
-          - board: NERDAXEGAIA
-            upload_www: false
-            label: NerdAxeGaia
-          - board: NERDHAXEGAMMA
-            upload_www: false
-            label: NerdHaxe-Gamma
-          - board: NERDEKO
-            upload_www: false
-            label: NerdEKO
-          - board: NERDQX
-            upload_www: false
-            label: NerdQX
-          - board: Q1370
-            upload_www: false
-            label: Q1370
-          - board: Q1373
-            upload_www: false
-            label: Q1373
+      BOARD: NERDQAXEPLUS2
+      BIGSCREEN: "1"
+      FIRMWARE_BIN: esp-miner-NerdQAxe++.bin
+      FACTORY_BIN: esp-miner-factory-NERDQAXEPLUS2.bin
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-      with:
-        submodules: recursive
 
-    # Started from a tag ("Use workflow from" -> Tags), the tag is the version and
-    # the release target. Started from a branch, the newest tag reachable from the
-    # built commit is used (with several tags on one commit, git picks one itself).
-    - name: Get Version Tag
-      id: version_tag
+    - name: Get version tag
       run: |
-        git fetch --tags  # Ensure all tags are fetched
+        git fetch --tags
         if [ "${{ github.ref_type }}" == "tag" ]; then
           version="${{ github.ref_name }}"
-          if [ "$(git rev-parse "refs/tags/${version}^{commit}")" != "$(git rev-parse HEAD)" ]; then
-            echo "::error::tag '${version}' does not point to the built commit"
-            exit 1
-          fi
         else
           version=$(git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD)
-          if git rev-parse -q --verify "refs/tags/${version}" >/dev/null && \
-             [ "$(git rev-parse "refs/tags/${version}^{commit}")" != "$(git rev-parse HEAD)" ]; then
-            echo "::warning::'${version}' does not point to the built commit, the build contains newer commits"
+        fi
+        echo "VERSION_TAG=${version}" >> "$GITHUB_ENV"
+
+    - name: Insert web UI version
+      run: |
+        commit_hash=$(git rev-parse --short HEAD)
+        sed -i "s|__COMMIT__|${commit_hash}|g" ./main/http_server/axe-os/src/app/app.module.ts
+        sed -i "s|__VERSION__|${VERSION_TAG}|g" ./main/http_server/axe-os/src/app/app.module.ts
+        for lang in de en es fr it pl ro da zh-CN; do
+          if [ -f "./main/http_server/axe-os/src/assets/i18n/${lang}.json" ]; then
+            mv "./main/http_server/axe-os/src/assets/i18n/${lang}.json" "./main/http_server/axe-os/src/assets/i18n/${lang}.${commit_hash}.json"
           fi
-        fi
-        echo "version=${version}" >> $GITHUB_OUTPUT
-        echo "VERSION_TAG=${version}" >> $GITHUB_ENV
-        echo "${version}" > version.txt
-        echo "VERSION_TAG=${version}"
-
-    - name: Install GitHub CLI
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y gh
-
-    - name: Check if release exists
-      id: check_release
-      run: |
-        if gh release view "${{ env.VERSION_TAG }}" >/dev/null 2>&1; then
-          RELEASE_EXISTS=true
-          RELEASE_PRERELEASE=$(gh release view "${{ env.VERSION_TAG }}" --json isPrerelease --jq .isPrerelease)
-        else
-          RELEASE_EXISTS=false
-          RELEASE_PRERELEASE=false
-        fi
-        echo "RELEASE_EXISTS=$RELEASE_EXISTS" >> $GITHUB_ENV
-
-        # Decide whether this build may be published (GitHub release + R2 webflasher).
-        # Diagnostic (core dump) builds are only published to pre-releases, so a
-        # stable release can never ship the dump download endpoint.
-        if [ "${{ inputs.enable_coredump }}" != "true" ]; then
-          echo "PUBLISH=true" >> $GITHUB_ENV
-        elif [ "$RELEASE_PRERELEASE" == "true" ]; then
-          echo "Diagnostic build for pre-release '${{ env.VERSION_TAG }}' — will be published"
-          echo "PUBLISH=true" >> $GITHUB_ENV
-        elif [ "$RELEASE_EXISTS" == "true" ]; then
-          echo "::error::'${{ env.VERSION_TAG }}' is a stable release — core dump diagnostic builds may only be published to pre-releases"
-          exit 1
-        else
-          echo "Diagnostic build without a release — artifacts only"
-          echo "PUBLISH=false" >> $GITHUB_ENV
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Insert Version
-      run: |
-        #!/bin/bash
-        set -e
-        COMMIT_HASH=$(git rev-parse --short HEAD)
-        sed -e "s|__COMMIT__|${COMMIT_HASH}|g" -i ./main/http_server/axe-os/src/app/app.module.ts
-        sed -e "s|__VERSION__|${VERSION_TAG}|g" -i ./main/http_server/axe-os/src/app/app.module.ts
-        for l in de en es fr it pl ro da zh-CN; do
-          mv "./main/http_server/axe-os/src/assets/i18n/${l}.json" "./main/http_server/axe-os/src/assets/i18n/${l}.${COMMIT_HASH}.json"
         done
 
-    # Diagnostic builds layer sdkconfig.coredump on top of the defaults. The firmware
-    # gates the download endpoint on CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH, so this is
-    # the single switch for capture + endpoint. An empty value means "use defaults".
-    - name: Configure core dump build
+    - name: Set target
       run: |
-        if [ "${{ inputs.enable_coredump }}" == "true" ]; then
-          echo "Diagnostic build: panic core dumps + download endpoint ENABLED"
-          echo "IDF_SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.coredump" >> $GITHUB_ENV
-          echo "ARTIFACT_SUFFIX=-coredump" >> $GITHUB_ENV
-        else
-          echo "IDF_SDKCONFIG_DEFAULTS=" >> $GITHUB_ENV
-          echo "ARTIFACT_SUFFIX=" >> $GITHUB_ENV
-        fi
+        docker run --rm --user root \
+          -e BOARD="${BOARD}" \
+          -e BIGSCREEN="${BIGSCREEN}" \
+          -v "$PWD":/home/builder/project \
+          shufps/esp-idf-builder:5.3.6 \
+          idf.py set-target esp32s3
 
-    - name: Set Target
+    - name: Compile binaries
       run: |
-        # Run the Docker container to set ESP32-S3 target
-        docker run --rm --user root -e BOARD=${{ matrix.board }} -e SDKCONFIG_DEFAULTS="$IDF_SDKCONFIG_DEFAULTS" -v $PWD:/home/builder/project \
-        shufps/esp-idf-builder:5.3.6 idf.py set-target esp32s3
+        docker run --rm --user root \
+          -e BOARD="${BOARD}" \
+          -e BIGSCREEN="${BIGSCREEN}" \
+          -v "$PWD":/home/builder/project \
+          shufps/esp-idf-builder:5.3.6 \
+          bash -c 'idf.py build && apt-get update && apt-get install -y openssl && python tools/test_ca_bundle.py --build-dir build'
 
-    - name: Compile Binaries
+    - name: Prepare release assets
       run: |
-        # Run the Docker container to build the project
-        docker run --rm --user root -e BOARD=${{ matrix.board }} -e SDKCONFIG_DEFAULTS="$IDF_SDKCONFIG_DEFAULTS" -v $PWD:/home/builder/project \
-        shufps/esp-idf-builder:5.3.6 bash -c \
-        'idf.py build && apt-get update && apt-get install -y openssl && python tools/test_ca_bundle.py --build-dir build'
+        cp build/esp-miner.bin "build/${FIRMWARE_BIN}"
+        docker run --rm --user root \
+          -v "$PWD":/home/builder/project \
+          shufps/esp-idf-builder:5.3.6 \
+          esptool.py --chip esp32s3 merge_bin --flash_mode dio --flash_size 16MB --flash_freq 80m \
+          0x0 build/bootloader/bootloader.bin \
+          0x8000 build/partition_table/partition-table.bin \
+          0x10000 build/esp-miner.bin \
+          0x410000 build/www.bin \
+          0xf10000 build/ota_data_initial.bin \
+          -o "build/${FACTORY_BIN}"
+        {
+          echo "<!--"
+          sha256sum "build/${FACTORY_BIN}" "build/${FIRMWARE_BIN}" build/www.bin
+          echo "-->"
+        } > release-checksums.md
 
-    - name: Verify core dump configuration
-      run: |
-        if [ "${{ inputs.enable_coredump }}" == "true" ]; then
-          grep -q '^CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y' sdkconfig || { echo "::error::core dump requested but not enabled in sdkconfig"; exit 1; }
-        else
-          if grep -q '^CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y' sdkconfig; then echo "::error::core dump enabled in a normal build"; exit 1; fi
-        fi
-
-    - name: Merge Binaries
-      run: |
-        docker run --rm --user root -v $PWD:/home/builder/project \
-        shufps/esp-idf-builder:5.3.6 esptool.py --chip esp32s3 merge_bin --flash_mode dio --flash_size 16MB --flash_freq 80m \
-        0x0 build/bootloader/bootloader.bin \
-        0x8000 build/partition_table/partition-table.bin \
-        0x10000 build/esp-miner.bin \
-        0x410000 build/www.bin \
-        0xf10000 build/ota_data_initial.bin \
-        -o esp-miner-factory-${{ matrix.label }}-${{ env.VERSION_TAG }}.bin
-
-    - name: Rename Build Artifacts
-      run: |
-        sudo mv build/esp-miner.bin build/esp-miner-${{ matrix.label }}.bin
-        sudo mv build/esp-miner.elf build/esp-miner-${{ matrix.label }}.elf
-
-    - name: Upload factory binary
-      if: env.RELEASE_EXISTS == 'false' || inputs.enable_coredump
-      uses: actions/upload-artifact@v4
-      with:
-        name: esp-miner-factory-${{ matrix.label }}-${{ env.VERSION_TAG }}${{ env.ARTIFACT_SUFFIX }}.bin
-        path: esp-miner-factory-${{ matrix.label }}-${{ env.VERSION_TAG }}.bin
-        retention-days: 7
-
-    - name: Upload ELF for crash analysis
-      if: inputs.enable_coredump
-      uses: actions/upload-artifact@v4
-      with:
-        name: esp-miner-${{ matrix.label }}${{ env.ARTIFACT_SUFFIX }}.elf
-        path: build/esp-miner-${{ matrix.label }}.elf
-        retention-days: 7
-
-    - name: Upload BIN firmware
-      if: env.RELEASE_EXISTS == 'false' || inputs.enable_coredump
-      uses: actions/upload-artifact@v4
-      with:
-        name: esp-miner-${{ matrix.label }}${{ env.ARTIFACT_SUFFIX }}.bin
-        path: build/esp-miner-${{ matrix.label }}.bin
-        retention-days: 7
-
-    - name: Upload www.bin (only once)
-      if: (env.RELEASE_EXISTS == 'false' || inputs.enable_coredump) && matrix.board == 'NERDQAXEPLUS'
-      uses: actions/upload-artifact@v4
-      with:
-        name: www${{ env.ARTIFACT_SUFFIX }}.bin
-        path: build/www.bin
-        retention-days: 7
-
-
-    - name: Create files list
-      run: |
-        echo "esp-miner-factory-${{ matrix.label }}-${{ env.VERSION_TAG }}.bin" > file_list.txt
-        echo "build/esp-miner-${{ matrix.label }}.bin" >> file_list.txt
-        echo "build/esp-miner-${{ matrix.label }}.elf" >> file_list.txt
-        if [ "${{ matrix.upload_www }}" == "true" ]; then
-          echo "build/www.bin" >> file_list.txt
-        fi
-
-    - name: Set files variable
-      id: set_files_var
-      run: |
-        # Diagnostic builds attach the ELF so dumps can be decoded; normal releases keep it out.
-        if [ "${{ inputs.enable_coredump }}" == "true" ]; then
-          echo "files=$(cat file_list.txt | tr '\n' ',')" >> $GITHUB_ENV
-        else
-          echo "files=$(grep -v '\.elf$' file_list.txt | tr '\n' ',')" >> $GITHUB_ENV
-        fi
-        echo "r2_files=$(cat file_list.txt | tr '\n' ',')" >> $GITHUB_ENV
-
-    # Skip release upload if no release exists
-    - name: Skip release upload if not tagged
-      if: env.RELEASE_EXISTS == 'false'
-      run: echo "No GitHub release found for '${{ env.VERSION_TAG }}' — skipping release upload."
-
-    # Diagnostic builds are only published to pre-releases (see "Check if release exists")
-    - name: Skip publishing for diagnostic build
-      if: env.PUBLISH != 'true'
-      run: echo "Core dump diagnostic build without a pre-release — artifacts only, skipping GitHub release and R2 upload."
-
-    - name: Upload to Existing Release
-      if: env.RELEASE_EXISTS == 'true' && env.PUBLISH == 'true'
+    - name: Upload to release
       uses: softprops/action-gh-release@v1
       with:
-        files: ${{ env.files }}
+        files: |
+          build/${{ env.FACTORY_BIN }}
+          build/${{ env.FIRMWARE_BIN }}
+          build/www.bin
         tag_name: ${{ env.VERSION_TAG }}
+        append_body: true
+        body_path: release-checksums.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install rclone
-      if: env.RCLONE_CONF != '' && env.PUBLISH == 'true'
+    - name: Upload to Cloudflare R2
+      env:
+        RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
       run: |
-        curl -fsSL https://rclone.org/install.sh | sudo bash
+        if [ -z "${RCLONE_CONF:-}" ]; then
+          echo "RCLONE_CONF not set; skipping R2 upload."
+          exit 0
+        fi
 
-    - name: Upload to Cloudflare R2 using rclone
-      if: env.RCLONE_CONF != '' && env.PUBLISH == 'true'
-      run: |
+        curl -fsSL https://rclone.org/install.sh | sudo bash
         mkdir -p ~/.config/rclone
         echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
 
-        TARGET_DIR="webflasher/${{ env.VERSION_TAG }}"
-
-        echo "$r2_files" | tr ',' '\n' | grep -v '^$' | while read file; do
-          rclone copyto "$file" "r2:${TARGET_DIR}/$(basename "$file")" --s3-acl public-read
-        done
-
-  # Diagnostic pre-releases get a warning at the top of the release notes. Runs once
-  # after all boards were built; the marker comment keeps it from being added twice
-  # when the workflow is re-run.
-  diagnostic-release-notes:
-    needs: build-and-release
-    if: inputs.enable_coredump
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Add diagnostic build warning to release notes
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TAG: ${{ needs.build-and-release.outputs.version_tag }}
-      run: |
-        if [ -z "$TAG" ] || ! gh release view "$TAG" >/dev/null 2>&1; then
-          echo "No release for '$TAG' — artifacts only, nothing to update."
-          exit 0
-        fi
-        if [ "$(gh release view "$TAG" --json isPrerelease --jq .isPrerelease)" != "true" ]; then
-          echo "'$TAG' is not a pre-release — not touching its notes."
-          exit 0
-        fi
-
-        MARKER='<!-- diagnostic-build-warning -->'
-        gh release view "$TAG" --json body --jq .body > body.md
-        if grep -qF "$MARKER" body.md; then
-          echo "Warning already present in the notes of '$TAG'."
-          exit 0
-        fi
-
-        {
-          echo "$MARKER"
-          cat <<'EOF'
-        ⚠️ **Diagnostic build**: this pre-release has panic core dumps enabled, so the dump can be downloaded via `/api/system/coredump` and the System page. A dump may contain sensitive data such as your WiFi password and pool credentials, and without OTP anyone on your local network can download it. Please enable OTP, and only share dumps with people you trust.
-        EOF
-          echo
-          cat body.md
-        } > notes.md
-        gh release edit "$TAG" --notes-file notes.md
-        echo "Added the diagnostic build warning to the notes of '$TAG'."
+        target_dir="webflasher/${VERSION_TAG}"
+        rclone copyto "build/${FACTORY_BIN}" "r2:${target_dir}/${FACTORY_BIN}" --s3-acl public-read
+        rclone copyto "build/${FIRMWARE_BIN}" "r2:${target_dir}/${FIRMWARE_BIN}" --s3-acl public-read
+        rclone copyto build/www.bin "r2:${target_dir}/www.bin" --s3-acl public-read

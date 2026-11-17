@@ -120,7 +120,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
             (list ?? []).filter(r =>
               r.assets?.some(a => a.name === this.buildFactoryNameFor(r))
             )
-          )
+          ),
+          tap(list => {
+            if (!include) {
+              this.latestStableRelease = list.find(r => r.isLatest) ?? list[0] ?? null;
+              this.updateVersionStatus();
+            }
+          })
         )
       ),
       tap(list => {
@@ -136,7 +142,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.checkUpdateStatus();
   }
 
-  private normalizeModel(model) {
+  private normalizeModel(model: string) {
     return model.replace(/γ/g, 'Gamma').replace(/\s+/g, '');
   }
 
@@ -501,8 +507,25 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public trackRelease = (_: number, r: GithubRelease) => r.id;
 
   // Helper to build expected factory filename for a given release
-  private buildFactoryNameFor(release: GithubRelease): string {
-    return `esp-miner-factory-${this.normalizedModel}-${release.tag_name}.bin`;
+  private buildFactoryNameFor(_release: GithubRelease): string {
+    return `esp-miner-factory-${this.getFactoryBoardName()}.bin`;
+  }
+
+  private getFactoryBoardName(): string {
+    const model = this.normalizedModel || this.normalizeModel(this.deviceModel || '');
+    const namesByModel: Record<string, string> = {
+      'NerdAxe': 'NERDAXE',
+      'NerdAxeGamma': 'NERDAXEGAMMA',
+      'NerdEKO': 'NERDEKO',
+      'NerdHaxe-Gamma': 'NERDHAXEGAMMA',
+      'NerdOCTAXE+': 'NERDOCTAXEPLUS',
+      'NerdOCTAXE-Gamma': 'NERDOCTAXEGAMMA',
+      'NerdQAxe+': 'NERDQAXEPLUS',
+      'NerdQAxe++': 'NERDQAXEPLUS2',
+      'NerdQX': 'NERDQX',
+    };
+
+    return namesByModel[model] ?? model.toUpperCase().replace(/\+/g, 'PLUS').replace(/-/g, '');
   }
 
   public getAppVersion() {
